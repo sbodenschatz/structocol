@@ -7,6 +7,7 @@
 #ifndef STRUCTOCOL_SERIALIZATION_INCLUDED
 #define STRUCTOCOL_SERIALIZATION_INCLUDED
 
+#include <boost/pfr.hpp>
 #include <cstddef>
 #include <cstdint>
 
