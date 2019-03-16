@@ -23,6 +23,7 @@
 #include <string>
 #include <tuple>
 #include <type_traits>
+#include <variant>
 #include <vector>
 
 namespace structocol {
@@ -146,6 +147,31 @@ struct pair_serializer {
 	}
 };
 
+template <typename... T>
+struct variant_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, const std::variant<T...>& val) {
+		structocol::serialize(buffer, std::uint64_t{val.index()});
+		std::visit([&buffer](const auto& content) { structocol::serialize(buffer, content); }, val);
+	}
+	template <typename Buff>
+	static std::variant<T...> deserialize(Buff& buffer) {
+		auto index = structocol::deserialize<std::uint64_t>(buffer);
+		deserialze_impl_ptr<Buff> impl_table[] = {make_deserialize_impl<Buff, T>()...};
+		return impl_table[index](buffer);
+	}
+
+private:
+	template <typename Buff>
+	using deserialze_impl_ptr = std::variant<T...> (*)(Buff&);
+	template <typename Buff, typename Content>
+	static deserialze_impl_ptr<Buff> make_deserialize_impl() {
+		return [](Buff & buffer) -> std::variant<T...> {
+			return structocol::deserialize<Content>(buffer);
+		};
+	}
+};
+
 namespace detail {
 template <typename T, typename Enable = void>
 struct general_serializer {
@@ -260,7 +286,21 @@ struct serializer<std::pair<FT, ST>> : pair_serializer<FT, ST> {};
 template <typename... T>
 struct serializer<std::tuple<T...>> : tuple_serializer<T...> {};
 
+template <typename... T>
+struct serializer<std::variant<T...>> : variant_serializer<T...> {};
+
+template <>
+struct serializer<std::monostate> {
+	template <typename Buff>
+	static void serialize(Buff&, const std::monostate&) {}
+	template <typename Buff>
+	static std::monostate deserialize(Buff&) {
+		return {};
+	}
+};
+
 // TODO: variant, optional, floating point
+// TODO: Make sizes and index smaller?
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
