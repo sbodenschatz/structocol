@@ -23,7 +23,7 @@ struct nth_type<0, T, Args...> {
 
 template <typename T, typename U, typename... Args>
 struct index_of_type {
-	static constexpr std::size_t value = index_of_type_impl<T, Args...>::value + 1;
+	static constexpr std::size_t value = index_of_type<T, Args...>::value + 1;
 };
 
 template <typename T, typename U>
@@ -34,7 +34,7 @@ struct index_of_type<T, T, Args...> {
 	static constexpr std::size_t value = 0;
 };
 
-template <typename T, typename Types>
+template <typename T, typename... Types>
 constexpr std::size_t index_of_type_v = index_of_type<T, Types...>::value;
 
 } // namespace structocol

@@ -23,12 +23,12 @@ class protocol_handler {
 public:
 	template <typename Buff, typename Msg>
 	void send_message(Buff& buffer, const Msg& msg) {
-		constexpr auto type_index = detail::index_of_type_v<Msg, Msgs...>;
+		constexpr auto type_index = index_of_type_v<Msg, Msgs...>;
 	}
 
 	template <typename Buff, typename HandlerFunc>
 	void process_message(Buff& buffer, HandlerFunc& handler) {
-		impl_ptr impl_table[] = {make_process_impl<Buff, HandlerFunc, Msgs>()...};
+		process_impl_ptr<Buff, HandlerFunc> impl_table[] = {make_process_impl<Buff, HandlerFunc, Msgs>()...};
 	}
 };
 
