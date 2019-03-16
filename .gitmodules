@@ -1,3 +1,6 @@
 [submodule "magic_get"]
 	path = external/magic_get
 	url = https://github.com/apolukhin/magic_get.git
+[submodule "Catch2"]
+	path = external/Catch2
+	url = https://github.com/catchorg/Catch2.git
