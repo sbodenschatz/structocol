@@ -67,6 +67,10 @@ public:
 		return raw_vector_.capacity() - raw_vector_.size();
 	}
 
+	void reserve(std::size_t writable_capacity) {
+		raw_vector_.reserve(raw_vector_.size() + writable_capacity);
+	}
+
 	std::size_t available_bytes() const noexcept {
 		return raw_vector_.size() - read_offset_;
 	}
