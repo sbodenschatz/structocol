@@ -200,6 +200,11 @@ template <>
 struct serializer<std::uint8_t> : single_byte_serializer<std::uint8_t> {};
 template <>
 struct serializer<std::int8_t> : single_byte_serializer<std::int8_t> {};
+template <>
+struct serializer<char> : single_byte_serializer<char> {};
+#ifdef __cpp_char8_t
+struct serializer<char8_t> : single_byte_serializer<char8_t> {};
+#endif
 
 /// Note: Multi-byte integers are serialized in big endian format.
 
@@ -215,6 +220,14 @@ template <>
 struct serializer<std::uint64_t> : integral_big_endian_serializer<std::uint64_t> {};
 template <>
 struct serializer<std::int64_t> : integral_big_endian_serializer<std::int64_t> {};
+static_assert(sizeof(char16_t) * CHAR_BIT == 16, "(De)Serialization is only supported for architectures "
+												 "where char16_t is exactly 16 bits big (not larger).");
+template <>
+struct serializer<char16_t> : integral_big_endian_serializer<char16_t> {};
+static_assert(sizeof(char32_t) * CHAR_BIT == 32, "(De)Serialization is only supported for architectures "
+												 "where char32_t is exactly 32 bits big (not larger).");
+template <>
+struct serializer<char32_t> : integral_big_endian_serializer<char32_t> {};
 
 template <typename T>
 struct serializer<std::vector<T>> : dynamic_container_serializer<std::vector<T>> {};
@@ -231,10 +244,23 @@ struct serializer<std::multimap<K, V>> : dynamic_container_serializer<std::multi
 template <typename T>
 struct serializer<std::multiset<T>> : dynamic_container_serializer<std::multiset<T>> {};
 
+template <typename T>
+struct serializer<std::basic_string<T>> : dynamic_container_serializer<std::basic_string<T>> {};
+template <>
+struct serializer<std::wstring> {
+	// Serializing wstring is not supported because its encoding is too implementation-defined.
+	template <typename Buff>
+	static void serialize(Buff& buffer, const std::wstring& val) = delete;
+	template <typename Buff>
+	static std::wstring deserialize(Buff& buffer) = delete;
+};
+
 template <typename FT, typename ST>
 struct serializer<std::pair<FT, ST>> : pair_serializer<FT, ST> {};
 template <typename... T>
 struct serializer<std::tuple<T...>> : tuple_serializer<T...> {};
+
+// TODO: variant, optional, floating point
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
