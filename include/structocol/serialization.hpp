@@ -105,6 +105,33 @@ struct dynamic_container_serializer {
 	}
 };
 
+template <typename... T>
+struct tuple_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, const std::tuple<T...>& val) {
+		std::apply([&buffer](const auto&... elems) { (structocol::serialize(buffer, elems), ...); }, val);
+	}
+	template <typename Buff>
+	static std::tuple<T...> deserialize(Buff& buffer) {
+		return deserialize_impl(buffer, std::make_index_sequence<sizeof...(T)>{});
+	}
+
+private:
+	template <typename Buff, std::size_t... indseq>
+	static std::tuple<T...> deserialize_impl(Buff& buffer, std::index_sequence<indseq...>) {
+		// Can't simply be this due to sequencing rules:
+		// return T{deserialize<boost::pfr::tuple_element_t<indseq, T>>(buffer)...};
+		std::tuple<std::optional<T>...> elements;
+		// Fold over comma is correctly sequenced left to right:
+		(deserialize_element<T, indseq>(buffer, elements), ...);
+		return std::tuple(std::move(*std::get<indseq>(elements))...);
+	}
+	template <typename ElemT, std::size_t index, typename Buff, typename Tup>
+	static void deserialize_element(Buff& buffer, Tup& tup) {
+		std::get<index>(tup) = structocol::deserialize<ElemT>(buffer);
+	}
+};
+
 template <typename FT, typename ST>
 struct pair_serializer {
 	template <typename Buff>
@@ -206,6 +233,8 @@ struct serializer<std::multiset<T>> : dynamic_container_serializer<std::multiset
 
 template <typename FT, typename ST>
 struct serializer<std::pair<FT, ST>> : pair_serializer<FT, ST> {};
+template <typename... T>
+struct serializer<std::tuple<T...>> : tuple_serializer<T...> {};
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
