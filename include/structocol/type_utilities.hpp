@@ -34,6 +34,11 @@ struct index_of_type<T, T, Args...> {
 	static constexpr std::size_t value = 0;
 };
 
+template <typename T>
+struct index_of_type<T, T> {
+	static constexpr std::size_t value = 0;
+};
+
 template <typename T, typename... Types>
 constexpr std::size_t index_of_type_v = index_of_type<T, Types...>::value;
 
