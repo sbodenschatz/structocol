@@ -33,7 +33,7 @@ public:
 	}
 
 	template <std::size_t bytes>
-	std::optional<std::array<std::byte, bytes>> read() {
+	std::optional<std::array<std::byte, bytes>> try_read() {
 		std::optional<std::array<std::byte, bytes>> ret = std::array<std::byte, bytes>{};
 		auto after_read_offset = read_offset_ + bytes;
 		if(after_read_offset > raw_vector_.size()) return std::nullopt;
