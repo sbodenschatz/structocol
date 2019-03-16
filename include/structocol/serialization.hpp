@@ -172,6 +172,26 @@ private:
 	}
 };
 
+template <typename T>
+struct optional_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, const std::optional<T>& val) {
+		structocol::serialize(buffer, val.has_value());
+		if(val.has_value()) {
+			structocol::serialize(buffer, *val);
+		}
+	}
+	template <typename Buff>
+	static std::optional<T> deserialize(Buff& buffer) {
+		auto has_val = structocol::deserialize<bool>(buffer);
+		if(has_val) {
+			return structocol::deserialize<T>(buffer);
+		} else {
+			return std::nullopt;
+		}
+	}
+};
+
 namespace detail {
 template <typename T, typename Enable = void>
 struct general_serializer {
@@ -290,6 +310,8 @@ struct serializer<std::tuple<T...>> : tuple_serializer<T...> {};
 
 template <typename... T>
 struct serializer<std::variant<T...>> : variant_serializer<T...> {};
+template <typename T>
+struct serializer<std::optional<T>> : optional_serializer<T> {};
 
 template <>
 struct serializer<std::monostate> {
