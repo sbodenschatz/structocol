@@ -9,6 +9,7 @@
 
 #include "protocol_handler.hpp"
 #include "serialization.hpp"
+#include "type_utilities.hpp"
 #include "vector_buffer.hpp"
 
 #endif // STRUCTOCOL_MAIN_HEADER_INCLUDED

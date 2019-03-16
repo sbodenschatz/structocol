@@ -7,10 +7,10 @@
 #ifndef STRUCTOCOL_PROTOCOL_HANDLER_INCLUDED
 #define STRUCTOCOL_PROTOCOL_HANDLER_INCLUDED
 
-#include "serialization.hpp"
-#include "type_utilities.hpp"
 #include <cstdint>
 #include <stdexcept>
+#include <structocol/serialization.hpp>
+#include <structocol/type_utilities.hpp>
 #include <variant>
 
 namespace structocol {
@@ -34,7 +34,7 @@ class protocol_handler {
 	}
 
 public:
-	using type_index_t = std::uint64_t;
+	using type_index_t = sufficient_uint_t<sizeof...(Msgs)>;
 	template <typename Buff, typename Msg>
 	void send_message(Buff& buffer, const Msg& msg) {
 		constexpr auto type_index = index_of_type_v<Msg, Msgs...>;

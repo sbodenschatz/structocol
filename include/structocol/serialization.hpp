@@ -21,6 +21,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <structocol/type_utilities.hpp>
 #include <tuple>
 #include <type_traits>
 #include <variant>
@@ -151,17 +152,18 @@ template <typename... T>
 struct variant_serializer {
 	template <typename Buff>
 	static void serialize(Buff& buffer, const std::variant<T...>& val) {
-		structocol::serialize(buffer, std::uint64_t{val.index()});
+		structocol::serialize(buffer, index_type(val.index()));
 		std::visit([&buffer](const auto& content) { structocol::serialize(buffer, content); }, val);
 	}
 	template <typename Buff>
 	static std::variant<T...> deserialize(Buff& buffer) {
-		auto index = structocol::deserialize<std::uint64_t>(buffer);
+		auto index = structocol::deserialize<index_type>(buffer);
 		deserialze_impl_ptr<Buff> impl_table[] = {make_deserialize_impl<Buff, T>()...};
 		return impl_table[index](buffer);
 	}
 
 private:
+	using index_type = sufficient_uint_t<sizeof...(T)>;
 	template <typename Buff>
 	using deserialze_impl_ptr = std::variant<T...> (*)(Buff&);
 	template <typename Buff, typename Content>
@@ -323,8 +325,8 @@ struct serializer<std::monostate> {
 	}
 };
 
-// TODO: variant, optional, floating point
-// TODO: Make sizes and index smaller?
+// TODO: floating point
+// TODO: Make sizes smaller?
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
