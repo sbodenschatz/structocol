@@ -21,25 +21,32 @@ add_library(structocol
 		include/structocol/type_utilities.hpp
 	)
 add_library(structocol::structocol ALIAS structocol)
-
 target_include_directories(structocol PUBLIC
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 		$<INSTALL_INTERFACE:include>
 	)
-
 target_compile_features(structocol PUBLIC cxx_std_17)
-
 target_link_libraries(structocol PUBLIC boost::pfr)
+target_compile_options(structocol PRIVATE
+		$<$<CXX_COMPILER_ID:MSVC>:/MP>#/W4
+		$<$<CXX_COMPILER_ID:GNU>: >#-Wall -Wextra -Werror
+		$<$<CXX_COMPILER_ID:Clang>: >#-Wall -Wextra -Werror
+	)
 
 if(STRUCTOCOL_BUILD_TESTING)
-	add_executable(structocol_unit_test
+	add_executable(structocol_unit_tests
 			src/main.test.cpp
 			src/structocol/vector_buffer.test.cpp
 			src/structocol/serialization.test.cpp
 		)
-	target_link_libraries(structocol_unit_test PUBLIC
+	target_link_libraries(structocol_unit_tests PUBLIC
 			structocol::structocol
 			Catch2::Catch2
 		)
-	catch_discover_tests(structocol_unit_test)
+	target_compile_options(structocol_unit_tests PRIVATE
+		$<$<CXX_COMPILER_ID:MSVC>:/MP /bigobj>#/W4 /WX
+		$<$<CXX_COMPILER_ID:GNU>: >#-Wall -Wextra -Werror
+		$<$<CXX_COMPILER_ID:Clang>: >#-Wall -Wextra -Werror
+	)
+	catch_discover_tests(structocol_unit_tests)
 endif()

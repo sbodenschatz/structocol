@@ -210,3 +210,53 @@ TEMPLATE_TEST_CASE("serialization and deserialization of strings preserves value
 	auto outval = structocol::deserialize<TestType>(vb);
 	REQUIRE(inval == outval);
 }
+
+namespace {
+template <typename T>
+T init_sum_type() {
+	if constexpr(std::is_same_v<std::nullopt_t, T>) {
+		return std::nullopt;
+	} else if constexpr(std::is_same_v<std::monostate, T>) {
+		return std::monostate{};
+	} else if constexpr(std::is_integral_v<T>) {
+		T v;
+		init_primitive(v);
+		return v;
+	} else {
+		T v;
+		init_vocabulary(v);
+		return v;
+	}
+}
+} // namespace
+
+TEMPLATE_TEST_CASE("serialization and deserialization of variants preserves value", "[serialization]",
+				   std::monostate, std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t,
+				   std::int16_t, std::uint16_t, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t) {
+	structocol::vector_buffer vb;
+	using var_t = std::variant<std::monostate, std::string, std::vector<std::uint32_t>, std::int8_t,
+							   std::uint8_t, std::int16_t, std::uint16_t, std::int32_t, std::uint32_t,
+							   std::int64_t, std::uint64_t>;
+	var_t inval = init_sum_type<TestType>();
+	structocol::serialize(vb, inval);
+	auto outval = structocol::deserialize<var_t>(vb);
+	REQUIRE(inval == outval);
+}
+
+TEMPLATE_TEST_CASE("serialization and deserialization of optionals preserves value", "[serialization]",
+				   std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t, std::int16_t,
+				   std::uint16_t, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t) {
+	structocol::vector_buffer vb;
+	SECTION("with value") {
+		std::optional<TestType> inval = init_sum_type<TestType>();
+		structocol::serialize(vb, inval);
+		auto outval = structocol::deserialize<std::optional<TestType>>(vb);
+		REQUIRE(inval == outval);
+	}
+	SECTION("empty") {
+		std::optional<TestType> inval;
+		structocol::serialize(vb, inval);
+		auto outval = structocol::deserialize<std::optional<TestType>>(vb);
+		REQUIRE(inval == outval);
+	}
+}
