@@ -90,7 +90,7 @@ template <typename T>
 struct dynamic_container_serializer {
 	template <typename Buff>
 	static void serialize(Buff& buffer, const T& val) {
-		structocol::serialize(buffer, std::size_t{val.size()});
+		structocol::serialize(buffer, std::uint64_t{val.size()});
 		for(const auto& elem : val) {
 			structocol::serialize(buffer, elem);
 		}
@@ -98,8 +98,8 @@ struct dynamic_container_serializer {
 	template <typename Buff>
 	static T deserialize(Buff& buffer) {
 		T val;
-		auto size = structocol::deserialize<std::size_t>(buffer);
-		for(std::size_t i = 0; i < size; ++i) {
+		auto size = structocol::deserialize<std::uint64_t>(buffer);
+		for(std::uint64_t i = 0; i < size; ++i) {
 			val.insert(val.end(), structocol::deserialize<typename T::value_type>(buffer));
 		}
 		return val;
