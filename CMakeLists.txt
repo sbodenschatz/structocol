@@ -38,6 +38,7 @@ if(STRUCTOCOL_BUILD_TESTING)
 			src/main.test.cpp
 			src/structocol/vector_buffer.test.cpp
 			src/structocol/serialization.test.cpp
+			src/structocol/protocol_handler.test.cpp
 		)
 	target_link_libraries(structocol_unit_tests PUBLIC
 			structocol::structocol
