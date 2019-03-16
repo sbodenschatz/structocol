@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <structocol/serialization.hpp>
 #include <structocol/vector_buffer.hpp>
+#include <tuple>
 
 namespace {
 void init(std::uint8_t& v) {
@@ -37,6 +38,46 @@ TEMPLATE_TEST_CASE("serialization and deserialization of primitive types preserv
 	structocol::vector_buffer vb;
 	TestType inval;
 	init(inval);
+	structocol::serialize(vb, inval);
+	auto outval = structocol::deserialize<TestType>(vb);
+	REQUIRE(inval == outval);
+}
+
+namespace {
+struct test_a {
+	std::int16_t x;
+	std::uint64_t y;
+	std::int8_t z;
+};
+
+struct test_b {
+	std::int64_t x;
+	test_a y;
+};
+
+bool operator==(const test_a& lhs, const test_a& rhs) noexcept {
+	return std::tie(lhs.x, lhs.y, lhs.z) == std::tie(rhs.x, rhs.y, rhs.z);
+}
+bool operator==(const test_b& lhs, const test_b& rhs) noexcept {
+	return std::tie(lhs.x, lhs.y) == std::tie(rhs.x, rhs.y);
+}
+
+template <typename T>
+T init() {
+	if constexpr(std::is_same_v<T, test_a>) {
+		return {-0x5678, 0xFEDCBA9876543210, 0x7A};
+	} else if constexpr(std::is_same_v<T, test_b>) {
+		return {-0x76543210ABCDEF89, init<test_a>()};
+	} else {
+		return {};
+	}
+}
+} // namespace
+
+TEMPLATE_TEST_CASE("serialization and deserialization of aggregate types preserves value", "[serialization]",
+				   test_a, test_b) {
+	structocol::vector_buffer vb;
+	auto inval = init<TestType>();
 	structocol::serialize(vb, inval);
 	auto outval = structocol::deserialize<TestType>(vb);
 	REQUIRE(inval == outval);
