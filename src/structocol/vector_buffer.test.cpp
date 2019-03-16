@@ -91,7 +91,7 @@ TEST_CASE("vector_buffer trim reuses already read memory to regain writable capa
 	}
 	SECTION("reserve and trim") {
 		vb.trim();
-		auto quarter_data = vb.read<64>();
+		[[maybe_unused]] auto quarter_data = vb.read<64>();
 		vb.reserve(4096);
 		REQUIRE(vb.writable_capacity() >= 4096);
 		auto old_write_cap = vb.writable_capacity();

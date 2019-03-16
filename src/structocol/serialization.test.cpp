@@ -107,31 +107,31 @@ template <typename T, typename VT = typename T::value_type,
 						   int>
 				  dummy = 0>
 void init_vocabulary(T& m) {
-	m.emplace(123, 127);
-	m.emplace(10, 42);
-	m.emplace(1, 124);
-	m.emplace(100, 20);
-	m.emplace(100, 25);
+	m.emplace(FT{123}, ST{127});
+	m.emplace(FT{10}, ST{42});
+	m.emplace(FT{1}, ST{124});
+	m.emplace(FT{100}, ST{20});
+	m.emplace(FT{100}, ST{25});
 	if constexpr(std::is_signed_v<FT>) {
-		m.emplace(-123, 127);
-		m.emplace(-10, 42);
-		m.emplace(-1, 124);
-		m.emplace(-100, 20);
-		m.emplace(-100, 25);
+		m.emplace(FT{-123}, ST{127});
+		m.emplace(FT{-10}, ST{42});
+		m.emplace(FT{-1}, ST{124});
+		m.emplace(FT{-100}, ST{20});
+		m.emplace(FT{-100}, ST{25});
 	}
 	if constexpr(std::is_signed_v<ST>) {
-		m.emplace(122, -127);
-		m.emplace(9, -42);
-		m.emplace(2, -124);
-		m.emplace(101, -20);
-		m.emplace(101, -25);
+		m.emplace(FT{122}, ST{-127});
+		m.emplace(FT{9}, ST{-42});
+		m.emplace(FT{2}, ST{-124});
+		m.emplace(FT{101}, ST{-20});
+		m.emplace(FT{101}, ST{-25});
 	}
 	if constexpr(std::is_signed_v<FT> && std::is_signed_v<ST>) {
-		m.emplace(-122, -127);
-		m.emplace(-9, -42);
-		m.emplace(-2, -124);
-		m.emplace(-101, -20);
-		m.emplace(-101, -25);
+		m.emplace(FT{-122}, ST{-127});
+		m.emplace(FT{-9}, ST{-42});
+		m.emplace(FT{-2}, ST{-124});
+		m.emplace(FT{-101}, ST{-20});
+		m.emplace(FT{-101}, ST{-25});
 	}
 }
 } // namespace

@@ -53,8 +53,8 @@ struct integral_big_endian_serializer {
 	static void serialize(Buff& buffer, T val) {
 		uint uval = val;
 		std::array<std::byte, sizeof(T)> data;
-		for(int i = 0; i < sizeof(T); i++) {
-			int shift = (sizeof(T) - 1 - i) * CHAR_BIT;
+		for(std::size_t i = 0; i < sizeof(T); i++) {
+			std::size_t shift = (sizeof(T) - 1 - i) * CHAR_BIT;
 			uint mask = uint(0xFFu) << shift;
 			data[i] = std::byte((uval & mask) >> shift);
 		}
@@ -64,8 +64,8 @@ struct integral_big_endian_serializer {
 	static T deserialize(Buff& buffer) {
 		auto data = buffer.template read<sizeof(T)>();
 		uint val = 0;
-		for(int i = 0; i < sizeof(T); i++) {
-			int shift = (sizeof(T) - 1 - i) * CHAR_BIT;
+		for(std::size_t i = 0; i < sizeof(T); i++) {
+			std::size_t shift = (sizeof(T) - 1 - i) * CHAR_BIT;
 			val |= std::to_integer<uint>(data[i]) << shift;
 		}
 		if constexpr(std::is_signed_v<T>) {
