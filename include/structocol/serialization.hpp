@@ -151,11 +151,11 @@ struct serializer<std::int64_t> : integral_big_endian_serializer<std::int64_t> {
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
-	serializer<T>::serialize(buffer, val);
+	serializer<std::remove_const_t<T>>::serialize(buffer, val);
 }
 template <typename T, typename Buff>
 T deserialize(Buff& buffer) {
-	return serializer<T>::deserialize(buffer);
+	return serializer<std::remove_const_t<T>>::deserialize(buffer);
 }
 
 } // namespace structocol
