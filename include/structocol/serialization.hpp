@@ -13,11 +13,17 @@
 #include <climits>
 #include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <limits>
+#include <list>
+#include <map>
 #include <optional>
+#include <set>
 #include <stdexcept>
+#include <string>
 #include <tuple>
 #include <type_traits>
+#include <vector>
 
 namespace structocol {
 
@@ -76,6 +82,40 @@ private:
 		if(val <= static_cast<uint>(min)) return static_cast<T>(val);
 		if(val >= static_cast<uint>(min)) return static_cast<T>(val - static_cast<uint>(min)) + min;
 		throw std::overflow_error("Value not representable in target type.");
+	}
+};
+
+template <typename T>
+struct dynamic_container_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, const T& val) {
+		structocol::serialize(buffer, std::size_t{val.size()});
+		for(const auto& elem : val) {
+			structocol::serialize(buffer, elem);
+		}
+	}
+	template <typename Buff>
+	static T deserialize(Buff& buffer) {
+		T val;
+		auto size = structocol::deserialize<std::size_t>(buffer);
+		for(std::size_t i = 0; i < size; ++i) {
+			val.insert(val.end(), structocol::deserialize<typename T::value_type>(buffer));
+		}
+		return val;
+	}
+};
+
+template <typename FT, typename ST>
+struct pair_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, const std::pair<FT, ST>& val) {
+		structocol::serialize(buffer, val.first);
+		structocol::serialize(buffer, val.second);
+	}
+	template <typename Buff>
+	static std::pair<FT, ST> deserialize(Buff& buffer) {
+		auto first = structocol::deserialize<FT>(buffer);
+		return std::pair(std::move(first), structocol::deserialize<ST>(buffer));
 	}
 };
 
@@ -148,6 +188,24 @@ template <>
 struct serializer<std::uint64_t> : integral_big_endian_serializer<std::uint64_t> {};
 template <>
 struct serializer<std::int64_t> : integral_big_endian_serializer<std::int64_t> {};
+
+template <typename T>
+struct serializer<std::vector<T>> : dynamic_container_serializer<std::vector<T>> {};
+template <typename T>
+struct serializer<std::list<T>> : dynamic_container_serializer<std::list<T>> {};
+template <typename T>
+struct serializer<std::deque<T>> : dynamic_container_serializer<std::deque<T>> {};
+template <typename K, typename V>
+struct serializer<std::map<K, V>> : dynamic_container_serializer<std::map<K, V>> {};
+template <typename T>
+struct serializer<std::set<T>> : dynamic_container_serializer<std::set<T>> {};
+template <typename K, typename V>
+struct serializer<std::multimap<K, V>> : dynamic_container_serializer<std::multimap<K, V>> {};
+template <typename T>
+struct serializer<std::multiset<T>> : dynamic_container_serializer<std::multiset<T>> {};
+
+template <typename FT, typename ST>
+struct serializer<std::pair<FT, ST>> : pair_serializer<FT, ST> {};
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
