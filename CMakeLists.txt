@@ -35,6 +35,7 @@ if(STRUCTOCOL_BUILD_TESTING)
 	add_executable(structocol_unit_test
 			src/main.test.cpp
 			src/structocol/vector_buffer.test.cpp
+			src/structocol/serialization.test.cpp
 		)
 	target_link_libraries(structocol_unit_test PUBLIC
 			structocol::structocol
