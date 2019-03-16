@@ -92,10 +92,10 @@ namespace {
 template <typename T, typename VT = typename T::value_type,
 		  typename = decltype(std::declval<T>().insert(std::declval<T>().end(), std::declval<VT>())),
 		  std::enable_if_t<std::is_integral_v<VT>, int> dummy = 0>
-void init_vocabulary(T& vec) {
-	std::generate_n(std::inserter(vec, vec.end()), 32, [v = VT{0}]() mutable { return v += 3; });
+void init_vocabulary(T& seq) {
+	std::generate_n(std::inserter(seq, seq.end()), 32, [v = VT{0}]() mutable { return v += 3; });
 	if constexpr(std::is_signed_v<VT>) {
-		std::generate_n(std::inserter(vec, vec.end()), 32, [v = VT{0}]() mutable { return v -= 3; });
+		std::generate_n(std::inserter(seq, seq.end()), 32, [v = VT{0}]() mutable { return v -= 3; });
 	}
 }
 template <typename T, typename VT = typename T::value_type,
@@ -106,32 +106,32 @@ template <typename T, typename VT = typename T::value_type,
 								   std::is_integral_v<ST>,			// and integral value
 						   int>
 				  dummy = 0>
-void init_vocabulary(T& vec) {
-	vec.emplace(123, 127);
-	vec.emplace(10, 42);
-	vec.emplace(1, 124);
-	vec.emplace(100, 20);
-	vec.emplace(100, 25);
+void init_vocabulary(T& m) {
+	m.emplace(123, 127);
+	m.emplace(10, 42);
+	m.emplace(1, 124);
+	m.emplace(100, 20);
+	m.emplace(100, 25);
 	if constexpr(std::is_signed_v<FT>) {
-		vec.emplace(-123, 127);
-		vec.emplace(-10, 42);
-		vec.emplace(-1, 124);
-		vec.emplace(-100, 20);
-		vec.emplace(-100, 25);
+		m.emplace(-123, 127);
+		m.emplace(-10, 42);
+		m.emplace(-1, 124);
+		m.emplace(-100, 20);
+		m.emplace(-100, 25);
 	}
 	if constexpr(std::is_signed_v<ST>) {
-		vec.emplace(122, -127);
-		vec.emplace(9, -42);
-		vec.emplace(2, -124);
-		vec.emplace(101, -20);
-		vec.emplace(101, -25);
+		m.emplace(122, -127);
+		m.emplace(9, -42);
+		m.emplace(2, -124);
+		m.emplace(101, -20);
+		m.emplace(101, -25);
 	}
 	if constexpr(std::is_signed_v<FT> && std::is_signed_v<ST>) {
-		vec.emplace(-122, -127);
-		vec.emplace(-9, -42);
-		vec.emplace(-2, -124);
-		vec.emplace(-101, -20);
-		vec.emplace(-101, -25);
+		m.emplace(-122, -127);
+		m.emplace(-9, -42);
+		m.emplace(-2, -124);
+		m.emplace(-101, -20);
+		m.emplace(-101, -25);
 	}
 }
 } // namespace
@@ -176,6 +176,33 @@ TEMPLATE_TEST_CASE("serialization and deserialization of associative containers 
 				   (std::multimap<std::int32_t, std::int32_t>), (std::multimap<std::uint64_t, std::uint64_t>),
 				   (std::multimap<std::int64_t, std::uint64_t>), (std::multimap<std::uint64_t, std::int64_t>),
 				   (std::multimap<std::int64_t, std::int64_t>)) {
+	structocol::vector_buffer vb;
+	TestType inval;
+	init_vocabulary(inval);
+	structocol::serialize(vb, inval);
+	auto outval = structocol::deserialize<TestType>(vb);
+	REQUIRE(inval == outval);
+}
+
+namespace {
+void init_vocabulary(std::string& s) {
+	s = "Hello World!";
+}
+void init_vocabulary(std::u16string& s) {
+	s = u"Hello World!";
+}
+void init_vocabulary(std::u32string& s) {
+	s = U"Hello World!";
+}
+} // namespace
+
+#ifdef __cpp_char8_t
+#define OPTIONAL_U8STR , std::u8string
+#else
+#define OPTIONAL_U8STR
+#endif
+TEMPLATE_TEST_CASE("serialization and deserialization of strings preserves value", "[serialization]",
+				   std::string, std::u16string, std::u32string OPTIONAL_U8STR) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_vocabulary(inval);
