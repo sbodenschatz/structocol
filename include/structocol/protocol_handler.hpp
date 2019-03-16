@@ -11,6 +11,7 @@
 #include "type_utilities.hpp"
 #include <cstdint>
 #include <stdexcept>
+#include <variant>
 
 namespace structocol {
 
@@ -23,6 +24,15 @@ class protocol_handler {
 		return [](Buff& buffer, HandlerFunc& handler) { handler(deserialize<Msg>(buffer)); };
 	}
 
+	template <typename Buff>
+	using receive_impl_ptr = std::variant<Msgs...> (*)(Buff&);
+	template <typename Buff, typename Msg>
+	static receive_impl_ptr<Buff> make_receive_impl() {
+		return [](Buff & buffer) -> std::variant<Msgs...> {
+			return deserialize<Msg>(buffer);
+		};
+	}
+
 public:
 	using type_index_t = std::uint64_t;
 	template <typename Buff, typename Msg>
@@ -30,6 +40,16 @@ public:
 		constexpr auto type_index = index_of_type_v<Msg, Msgs...>;
 		serialize(buffer, type_index_t{type_index});
 		serialize(buffer, msg);
+	}
+
+	template <typename Buff>
+	std::variant<Msgs...> receive_message(Buff& buffer) {
+		receive_impl_ptr<Buff> impl_table[] = {make_receive_impl<Buff, Msgs>()...};
+		auto type_index = deserialize<type_index_t>(buffer);
+		if(type_index >= sizeof...(Msgs)) {
+			throw std::invalid_argument("Invalid message type.");
+		}
+		return impl_table[type_index](buffer);
 	}
 
 	template <typename Buff, typename HandlerFunc>
