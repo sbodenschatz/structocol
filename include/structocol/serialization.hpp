@@ -231,6 +231,8 @@ struct serializer<char> : single_byte_serializer<char> {};
 #ifdef __cpp_char8_t
 struct serializer<char8_t> : single_byte_serializer<char8_t> {};
 #endif
+template <>
+struct serializer<bool> : single_byte_serializer<bool> {};
 
 /// Note: Multi-byte integers are serialized in big endian format.
 
