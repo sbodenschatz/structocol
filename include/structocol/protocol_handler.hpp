@@ -18,10 +18,10 @@ namespace structocol {
 template <typename... Msgs>
 class protocol_handler {
 	template <typename Buff, typename HandlerFunc>
-	using process_impl_ptr = void (*)(Buff&, HandlerFunc&);
+	using process_impl_ptr = void (*)(Buff&, const HandlerFunc&);
 	template <typename Buff, typename HandlerFunc, typename Msg>
 	static process_impl_ptr<Buff, HandlerFunc> make_process_impl() {
-		return [](Buff& buffer, HandlerFunc& handler) { handler(deserialize<Msg>(buffer)); };
+		return [](Buff& buffer, const HandlerFunc& handler) { handler(deserialize<Msg>(buffer)); };
 	}
 
 	template <typename Buff>
@@ -53,7 +53,7 @@ public:
 	}
 
 	template <typename Buff, typename HandlerFunc>
-	void process_message(Buff& buffer, HandlerFunc& handler) {
+	void process_message(Buff& buffer, const HandlerFunc& handler) {
 		process_impl_ptr<Buff, HandlerFunc> impl_table[] = {make_process_impl<Buff, HandlerFunc, Msgs>()...};
 		auto type_index = deserialize<type_index_t>(buffer);
 		if(type_index >= sizeof...(Msgs)) {
