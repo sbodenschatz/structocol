@@ -103,11 +103,11 @@ private:
 	template <typename Buff, std::size_t... indseq>
 	static T deserialize_impl(Buff& buffer, std::index_sequence<indseq...>) {
 		// Can't simply be this due to sequencing rules:
-		// return T{deserialize<boost::pfr::tuple_element_t<indseq, T>>(buffer)};
+		// return T{deserialize<boost::pfr::tuple_element_t<indseq, T>>(buffer)...};
 		std::tuple<std::optional<boost::pfr::tuple_element_t<indseq, T>>...> elements;
 		// Fold over comma is correctly sequenced left to right:
 		(deserialize_element<boost::pfr::tuple_element_t<indseq, T>, indseq>(buffer, elements), ...);
-		return T{*std::get<indseq>(elements)...};
+		return T{std::move(*std::get<indseq>(elements))...};
 	}
 	template <typename ElemT, std::size_t index, typename Buff, typename Tup>
 	static void deserialize_element(Buff& buffer, Tup& tup) {
