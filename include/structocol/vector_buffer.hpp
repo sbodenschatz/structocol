@@ -59,8 +59,12 @@ public:
 		read_offset_ = 0;
 	}
 
-	std::size_t capacity() const noexcept {
+	std::size_t total_capacity() const noexcept {
 		return raw_vector_.capacity();
+	}
+
+	std::size_t writable_capacity() const noexcept {
+		return raw_vector_.capacity() - raw_vector_.size();
 	}
 
 	std::size_t available_bytes() const noexcept {
