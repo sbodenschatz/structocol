@@ -35,9 +35,18 @@ void init_primitive(std::uint64_t& v) {
 void init_primitive(std::int64_t& v) {
 	v = -0x7CDEF123456789AB;
 }
+void init_primitive(float& v) {
+	v = 123.456f;
+}
+void init_primitive(double& v) {
+	v = 23456.67891;
+}
+void init_primitive(long double& v) {
+	v = 345678.912345;
+}
 } // namespace
 
-TEMPLATE_TEST_CASE("serialization and deserialization of primitive types preserves value", "[serialization]",
+TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserves value", "[serialization]",
 				   std::uint8_t, std::int8_t, std::uint16_t, std::int16_t, std::uint32_t, std::int32_t,
 				   std::uint64_t, std::int64_t) {
 	structocol::vector_buffer vb;
@@ -46,6 +55,16 @@ TEMPLATE_TEST_CASE("serialization and deserialization of primitive types preserv
 	structocol::serialize(vb, inval);
 	auto outval = structocol::deserialize<TestType>(vb);
 	REQUIRE(inval == outval);
+}
+
+TEMPLATE_TEST_CASE("serialization and deserialization of floating point types preserves value",
+				   "[serialization]", float, double, long double) {
+	structocol::vector_buffer vb;
+	TestType inval;
+	init_primitive(inval);
+	structocol::serialize(vb, inval);
+	auto outval = structocol::deserialize<TestType>(vb);
+	REQUIRE(inval == Approx(outval).epsilon(0.0001));
 }
 
 namespace {
