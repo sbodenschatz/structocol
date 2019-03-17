@@ -13,6 +13,7 @@
 #include <climits>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <deque>
 #include <limits>
 #include <list>
@@ -84,6 +85,33 @@ private:
 		if(val <= static_cast<uint>(min)) return static_cast<T>(val);
 		if(val >= static_cast<uint>(min)) return static_cast<T>(val - static_cast<uint>(min)) + min;
 		throw std::overflow_error("Value not representable in target type.");
+	}
+};
+
+static_assert(
+		std::numeric_limits<float>::is_iec559,
+		"(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
+static_assert(
+		std::numeric_limits<double>::is_iec559,
+		"(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
+static_assert(
+		std::numeric_limits<long double>::is_iec559,
+		"(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
+
+template <typename T>
+struct floating_point_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, T val) {
+		std::array<std::byte, sizeof(T)> data;
+		std::memcpy(data.data(), &val, sizeof(T));
+		buffer.write(data);
+	}
+	template <typename Buff>
+	static T deserialize(Buff& buffer) {
+		auto data = buffer.template read<sizeof(T)>();
+		T val;
+		std::memcpy(&val, data.data(), sizeof(T));
+		return val;
 	}
 };
 
@@ -278,6 +306,13 @@ static_assert(sizeof(char32_t) * CHAR_BIT == 32, "(De)Serialization is only supp
 												 "where char32_t is exactly 32 bits big (not larger).");
 template <>
 struct serializer<char32_t> : integral_big_endian_serializer<char32_t> {};
+
+template <>
+struct serializer<float> : floating_point_serializer<float> {};
+template <>
+struct serializer<double> : floating_point_serializer<double> {};
+template <>
+struct serializer<long double> : floating_point_serializer<long double> {};
 
 template <typename T>
 struct serializer<std::vector<T>> : dynamic_container_serializer<std::vector<T>> {};
