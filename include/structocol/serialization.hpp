@@ -360,7 +360,6 @@ struct serializer<std::monostate> {
 	}
 };
 
-// TODO: floating point
 // TODO: Make sizes smaller?
 
 template <typename Buff, typename T>
