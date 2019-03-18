@@ -1,0 +1,114 @@
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+- build
+
+.cache-paths-spec: &cache-paths
+- build
+
+.linux-cache-spec-template: &linux-cache-spec
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-${CI_JOB_NAME}
+    paths: *cache-paths
+
+.windows-cache-spec-template: &windows-cache-spec
+  cache:
+    paths: *cache-paths
+    key: "%CI_COMMIT_REF_SLUG%-%CI_JOB_NAME%-%CI_RUNNER_ID%"
+
+.linux-build-template: &linux-build-task
+  stage: build
+  <<: *linux-cache-spec
+  script:
+  - cmake -E make_directory build
+  - cd build
+  - cmake -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..
+  - cmake --build .
+  - ctest --output-on-failure
+  only:
+    variables:
+    - $CI_BUILD_IMAGE_BASE
+
+.mingw-build-template: &mingw-build-task
+  stage: build
+  <<: *windows-cache-spec    
+  tags:
+  - win-cpp
+  only:
+    variables:
+    - $WINDOWS_CI
+  script:
+  - cmake -E make_directory build
+  - cd build
+  - cmake -G Ninja -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ..
+  - cmake --build .
+  - ctest --output-on-failure
+
+.msbuild-build-template: &msbuild-build-task
+  stage: build
+  <<: *windows-cache-spec    
+  tags:
+  - win-cpp
+  only:
+    variables:
+    - $WINDOWS_CI
+  script:
+  - cmake -E make_directory build
+  - cd build
+  - cmake -G "Visual Studio 15 2017" -A x64 ..
+  - cmake --build . --config %BUILD_TYPE%
+  - ctest -C %BUILD_TYPE% --output-on-failure
+
+gcc-debug-build:
+  variables:
+    CXX: "g++"
+    CC: "gcc"
+    BUILD_TYPE: "Debug"
+  image: ${CI_BUILD_IMAGE_BASE}/gcc/debug
+  <<: *linux-build-task
+
+gcc-release-build:
+  variables:
+    CXX: "g++"
+    CC: "gcc"
+    BUILD_TYPE: "Release"
+  image: ${CI_BUILD_IMAGE_BASE}/gcc/release
+  <<: *linux-build-task
+
+clang-debug-build:
+  variables:
+    CXX: "clang++"
+    CC: "clang"
+    BUILD_TYPE: "Debug"
+  image: ${CI_BUILD_IMAGE_BASE}/clang/debug
+  <<: *linux-build-task
+
+clang-release-build:
+  variables:
+    CXX: "clang++"
+    CC: "clang"
+    BUILD_TYPE: "Release"
+  image: ${CI_BUILD_IMAGE_BASE}/clang/release
+  <<: *linux-build-task
+
+msvc-debug-build:
+  variables:
+    BUILD_TYPE: "Debug"
+  <<: *msbuild-build-task
+
+msvc-release-build:
+  variables:
+    BUILD_TYPE: "Release"
+  <<: *msbuild-build-task
+
+mingw-debug-build:
+  variables:
+    BUILD_TYPE: "Debug"
+  <<: *mingw-build-task
+
+mingw-release-build:
+  variables:
+    BUILD_TYPE: "Release"
+  <<: *mingw-build-task
+
