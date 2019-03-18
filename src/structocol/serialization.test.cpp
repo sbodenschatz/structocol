@@ -279,3 +279,15 @@ TEMPLATE_TEST_CASE("serialization and deserialization of optionals preserves val
 		REQUIRE(inval == outval);
 	}
 }
+
+TEST_CASE("serialization and deserialization of variable length integers preserves value",
+		  "[serialization]") {
+	auto inval =
+			GENERATE(as<std::size_t>{}, 1, 5, 0xF, 42, 0xFF, 0xFFF, 0xFFFF, 0xFFFF'F, 0xFFFF'FF, 0xFFFF'FFF,
+					 0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF,
+					 0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF'FFFF);
+	structocol::vector_buffer vb;
+	structocol::varint_serializer::serialize(vb, inval);
+	auto outval = structocol::varint_serializer::deserialize(vb);
+	REQUIRE(inval == outval);
+}
