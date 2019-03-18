@@ -28,6 +28,10 @@
 #include <variant>
 #include <vector>
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
 namespace structocol {
 
 static_assert(CHAR_BIT == 8, "(De)Serialization is only supported for architectures with 8-bit bytes.");
@@ -112,6 +116,49 @@ struct floating_point_serializer {
 		T val;
 		std::memcpy(&val, data.data(), sizeof(T));
 		return val;
+	}
+};
+
+struct varint_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, std::size_t val) {
+		int bits = required_bits(val);
+		int varbytes = bits / 7 + ((bits % 7) ? 1 : 0);
+		for(int varbyte = varbytes - 1; varbyte > 0; --varbyte) {
+			unsigned char vbval = (val >> (varbyte * 7)) & 0b0111'1111;
+			vbval |= 0b1000'0000;
+			buffer.write(std::array{std::byte(vbval)});
+		}
+		unsigned char vbval = val & 0b0111'1111;
+		buffer.write(std::array{std::byte(vbval)});
+	}
+	template <typename Buff>
+	static std::size_t deserialize(Buff& buffer) {
+		std::size_t val = 0;
+		bool cont = true;
+		while(cont) {
+			unsigned char vbval = std::to_integer<unsigned char>(buffer.template read<1>().front());
+			cont = vbval & 0b1000'0000;
+			val = (val << 7) | (vbval & 0b0111'1111);
+		}
+		return val;
+	}
+
+private:
+	static int required_bits(std::size_t val) {
+#if defined(__clang__) || defined(__GNUC__)
+		unsigned long long v{val | 1};
+		return CHAR_BIT * sizeof(val) - __builtin_clzll(v);
+#elif defined(_MSC_VER)
+		unsigned __int64 v{val | 1};
+		unsigned long index = 0;
+		_BitScanReverse64(&index, v);
+		return index + 1;
+#else
+		int num = 1;
+		while(val >>= 1) num++;
+		return num;
+#endif
 	}
 };
 
