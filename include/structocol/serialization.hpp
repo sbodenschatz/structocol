@@ -34,6 +34,14 @@
 
 namespace structocol {
 
+struct varint_t {
+	std::size_t value;
+	varint_t(std::size_t value) : value{value} {}
+	operator std::size_t() const {
+		return value;
+	}
+};
+
 static_assert(CHAR_BIT == 8, "(De)Serialization is only supported for architectures with 8-bit bytes.");
 
 template <typename Buff, typename T>
@@ -408,6 +416,9 @@ template <typename T>
 struct serializer<std::optional<T>> : optional_serializer<T> {};
 
 template <>
+struct serializer<varint_t> : varint_serializer {};
+
+template <>
 struct serializer<std::monostate> {
 	template <typename Buff>
 	static void serialize(Buff&, const std::monostate&) {}
@@ -416,8 +427,6 @@ struct serializer<std::monostate> {
 		return {};
 	}
 };
-
-// TODO: Make sizes smaller?
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
