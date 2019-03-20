@@ -418,8 +418,6 @@ struct serializer<std::monostate> {
 	}
 };
 
-// TODO: Make sizes smaller?
-
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
 	serializer<std::remove_const_t<T>>::serialize(buffer, val);
