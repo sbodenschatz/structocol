@@ -291,3 +291,14 @@ TEST_CASE("serialization and deserialization of variable length integers preserv
 	auto outval = structocol::varint_serializer::deserialize(vb);
 	REQUIRE(inval == outval);
 }
+
+TEST_CASE("serialization of varint_t applies correctly and preserves value.", "[serialization]") {
+	auto inval = GENERATE(as<structocol::varint_t>{}, 1, 5, 0xF, 42, 0xFF, 0xFFF, 0xFFFF, 0xFFFF'F, 0xFFFF'FF,
+						  0xFFFF'FFF, 0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF,
+						  0xFFFF'FFFF'FFFF, 0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF,
+						  0xFFFF'FFFF'FFFF'FFFF);
+	structocol::vector_buffer vb;
+	structocol::serialize(vb, inval);
+	auto outval = structocol::deserialize<structocol::varint_t>(vb);
+	REQUIRE(inval == outval);
+}
