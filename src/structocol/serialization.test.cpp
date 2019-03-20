@@ -302,3 +302,15 @@ TEST_CASE("serialization of varint_t applies correctly and preserves value.", "[
 	auto outval = structocol::deserialize<structocol::varint_t>(vb);
 	REQUIRE(inval == outval);
 }
+
+namespace {
+enum class test_enum { a, b, c, d };
+} // namespace
+
+TEST_CASE("serialization and deserialization of enums (enum class) preserves value", "[serialization]") {
+	auto inval = GENERATE(test_enum::a, test_enum::b, test_enum::c, test_enum::d);
+	structocol::vector_buffer vb;
+	structocol::serialize(vb, inval);
+	auto outval = structocol::deserialize<test_enum>(vb);
+	REQUIRE(inval == outval);
+}
