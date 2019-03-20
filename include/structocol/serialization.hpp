@@ -305,7 +305,17 @@ private:
 	}
 };
 
-// TODO: Specialized for other categories like enums.
+template <typename T>
+struct general_serializer<T, std::enable_if_t<std::is_enum_v<T>>> {
+	template <typename Buff>
+	static void serialize(Buff& buffer, T val) {
+		structocol::serialize(buffer, static_cast<std::underlying_type_t<T>>(val));
+	}
+	template <typename Buff>
+	static T deserialize(Buff& buffer) {
+		return static_cast<T>(structocol::deserialize<std::underlying_type_t<T>>(buffer));
+	}
+};
 
 } // namespace detail
 
