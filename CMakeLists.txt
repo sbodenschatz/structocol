@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.12)
 
 project(structocol)
 
@@ -14,7 +14,7 @@ if(STRUCTOCOL_BUILD_TESTING)
 	enable_testing()
 endif()
 
-add_library(structocol
+add_library(structocol_dummy
 		src/structocol/dummy.cpp
 		include/structocol/structocol.hpp
 		include/structocol/protocol_handler.hpp
@@ -22,18 +22,20 @@ add_library(structocol
 		include/structocol/vector_buffer.hpp
 		include/structocol/type_utilities.hpp
 	)
+add_library(structocol INTERFACE)
 add_library(structocol::structocol ALIAS structocol)
-target_include_directories(structocol PUBLIC
+target_include_directories(structocol INTERFACE
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 		$<INSTALL_INTERFACE:include>
 	)
-target_compile_features(structocol PUBLIC cxx_std_17)
-target_link_libraries(structocol PUBLIC boost::pfr)
-target_compile_options(structocol PRIVATE
+target_compile_features(structocol INTERFACE cxx_std_17)
+target_link_libraries(structocol INTERFACE boost::pfr)
+target_compile_options(structocol_dummy PRIVATE
 		$<$<CXX_COMPILER_ID:MSVC>:/MP /W4 /WX>
 		$<$<CXX_COMPILER_ID:GNU>: -Wall -Wextra -Werror>
 		$<$<CXX_COMPILER_ID:Clang>: -Wall -Wextra -Werror>
 	)
+target_link_libraries(structocol_dummy PUBLIC structocol)
 
 if(STRUCTOCOL_BUILD_TESTING)
 	add_executable(structocol_unit_tests
