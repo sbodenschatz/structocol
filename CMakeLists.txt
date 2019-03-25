@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.13)
 
 project(structocol)
 
-include(external/magic_get_submodule.cmake)
+if(NOT TARGET boost::pfr)
+	include(external/magic_get_submodule.cmake)
+endif()
 
 option(STRUCTOCOL_BUILD_TESTING "Build tests for the structocol library" ON)
 if(STRUCTOCOL_BUILD_TESTING)
