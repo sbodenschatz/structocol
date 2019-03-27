@@ -65,7 +65,7 @@ gcc-debug-build:
     CXX: "g++"
     CC: "gcc"
     BUILD_TYPE: "Debug"
-  image: ${CI_BUILD_IMAGE_BASE}/gcc/debug
+  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_GCC_DEBUG}
   <<: *linux-build-task
 
 gcc-release-build:
@@ -73,7 +73,7 @@ gcc-release-build:
     CXX: "g++"
     CC: "gcc"
     BUILD_TYPE: "Release"
-  image: ${CI_BUILD_IMAGE_BASE}/gcc/release
+  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_GCC_RELEASE}
   <<: *linux-build-task
 
 clang-debug-build:
@@ -81,7 +81,7 @@ clang-debug-build:
     CXX: "clang++"
     CC: "clang"
     BUILD_TYPE: "Debug"
-  image: ${CI_BUILD_IMAGE_BASE}/clang/debug
+  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
 
 clang-release-build:
@@ -89,7 +89,7 @@ clang-release-build:
     CXX: "clang++"
     CC: "clang"
     BUILD_TYPE: "Release"
-  image: ${CI_BUILD_IMAGE_BASE}/clang/release
+  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_RELEASE}
   <<: *linux-build-task
 
 msvc-debug-build:
