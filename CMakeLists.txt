@@ -37,6 +37,15 @@ target_compile_options(structocol_dummy PRIVATE
 	)
 target_link_libraries(structocol_dummy PUBLIC structocol)
 
+option(STRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT "Disable optional support for Boost.Asio even if boost could be found." OFF)
+if(NOT STRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT)
+	find_package(Boost)
+	if(TARGET Boost::boost)
+		target_link_libraries(structocol INTERFACE Boost::boost)
+		target_compile_definitions(structocol INTERFACE STRUCTOCOL_ENABLE_ASIO_SUPPORT)
+	endif()
+endif()
+
 if(STRUCTOCOL_BUILD_TESTING)
 	add_executable(structocol_unit_tests
 			src/main.test.cpp
