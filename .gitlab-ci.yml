@@ -23,7 +23,7 @@ stages:
   script:
   - cmake -E make_directory build
   - cd build
-  - cmake -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} ..
+  - cmake -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=${DISABLE_ASIO_SUPPORT} ..
   - cmake --build .
   - ctest --output-on-failure
   only:
@@ -41,7 +41,7 @@ stages:
   script:
   - cmake -E make_directory build
   - cd build
-  - cmake -G Ninja -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ..
+  - cmake -G Ninja -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=%DISABLE_ASIO_SUPPORT% ..
   - cmake --build .
   - ctest --output-on-failure
 
@@ -56,8 +56,8 @@ stages:
   script:
   - cmake -E make_directory build
   - cd build
-  - cmake -G "Visual Studio 15 2017" -A x64 ..
-  - cmake --build . --config %BUILD_TYPE%
+  - cmake -G "Visual Studio 15 2017" -A x64 -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=%DISABLE_ASIO_SUPPORT% ..
+  - cmake --build . --config %BUILD_TYPE% 
   - ctest -C %BUILD_TYPE% --output-on-failure
 
 gcc-debug-build:
@@ -65,6 +65,7 @@ gcc-debug-build:
     CXX: "g++"
     CC: "gcc"
     BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "OFF"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_GCC_DEBUG}
   <<: *linux-build-task
 
@@ -73,6 +74,7 @@ gcc-release-build:
     CXX: "g++"
     CC: "gcc"
     BUILD_TYPE: "Release"
+    DISABLE_ASIO_SUPPORT: "OFF"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_GCC_RELEASE}
   <<: *linux-build-task
 
@@ -81,6 +83,7 @@ clang-debug-build:
     CXX: "clang++"
     CC: "clang"
     BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "OFF"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
 
@@ -89,26 +92,60 @@ clang-release-build:
     CXX: "clang++"
     CC: "clang"
     BUILD_TYPE: "Release"
+    DISABLE_ASIO_SUPPORT: "OFF"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_RELEASE}
+  <<: *linux-build-task
+
+gcc-debug-build-noasio:
+  variables:
+    CXX: "g++"
+    CC: "gcc"
+    BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "ON"
+  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_GCC_DEBUG}
+  <<: *linux-build-task
+
+clang-debug-build-noasio:
+  variables:
+    CXX: "clang++"
+    CC: "clang"
+    BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "ON"
+  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
 
 msvc-debug-build:
   variables:
     BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "OFF"
   <<: *msbuild-build-task
 
 msvc-release-build:
   variables:
     BUILD_TYPE: "Release"
+    DISABLE_ASIO_SUPPORT: "OFF"
   <<: *msbuild-build-task
 
 mingw-debug-build:
   variables:
     BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "OFF"
   <<: *mingw-build-task
 
 mingw-release-build:
   variables:
     BUILD_TYPE: "Release"
+    DISABLE_ASIO_SUPPORT: "OFF"
   <<: *mingw-build-task
 
+msvc-debug-build-noasio:
+  variables:
+    BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "ON"
+  <<: *msbuild-build-task
+
+mingw-debug-build-noasio:
+  variables:
+    BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "ON"
+  <<: *mingw-build-task
