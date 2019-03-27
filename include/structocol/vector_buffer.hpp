@@ -14,6 +14,10 @@
 #include <stdexcept>
 #include <vector>
 
+#ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
+#include <boost/asio/buffer.hpp>
+#endif
+
 namespace structocol {
 
 class vector_buffer {
@@ -79,6 +83,32 @@ public:
 		raw_vector_.clear();
 		read_offset_ = 0;
 	}
+
+#ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
+	using const_buffers_type = decltype(
+			boost::asio::dynamic_buffer(std::declval<std::vector<std::byte>&>()))::const_buffers_type;
+
+	std::size_t size() const {
+		return available_bytes();
+	}
+
+	std::size_t max_size() const {
+		return raw_vector_.max_size();
+	}
+
+	std::size_t capacity() const {
+		return total_capacity();
+	}
+
+	const_buffers_type data() const {
+		return boost::asio::buffer(raw_vector_.data() + read_offset_, raw_vector_.size() - read_offset_);
+	}
+
+	void consume(std::size_t n) {
+		read_offset_ = std::min(read_offset_+n,raw_vector_.size());
+	}
+
+#endif
 };
 
 } // namespace structocol
