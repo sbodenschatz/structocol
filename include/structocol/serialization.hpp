@@ -7,9 +7,17 @@
 #ifndef STRUCTOCOL_SERIALIZATION_INCLUDED
 #define STRUCTOCOL_SERIALIZATION_INCLUDED
 
-#include <array>
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
 #include <boost/pfr/precise/core.hpp>
 #include <boost/pfr/precise/tuple_size.hpp>
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
+#include <array>
 #include <climits>
 #include <cstddef>
 #include <cstdint>
