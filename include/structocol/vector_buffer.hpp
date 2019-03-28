@@ -150,6 +150,7 @@ public:
 	template <typename Trim_Policy_>
 	friend class vector_buffer_dynamic_view;
 	vector_buffer_dynamic_view<Trim_Policy> dynamic_view();
+	vector_buffer_dynamic_view<Trim_Policy> dynamic_view(std::size_t max_size);
 #endif
 };
 
@@ -157,9 +158,13 @@ public:
 template <typename Trim_Policy>
 class vector_buffer_dynamic_view {
 	vector_buffer<Trim_Policy>& vb_;
+	std::size_t max_size_;
 
 public:
-	explicit vector_buffer_dynamic_view(vector_buffer<Trim_Policy>& vb) : vb_{vb} {}
+	explicit vector_buffer_dynamic_view(vector_buffer<Trim_Policy>& vb)
+			: vb_{vb}, max_size_{vb.raw_vector_.max_size()} {}
+	explicit vector_buffer_dynamic_view(vector_buffer<Trim_Policy>& vb, std::size_t max_size)
+			: vb_{vb}, max_size_{max_size} {}
 	using const_buffers_type = decltype(
 			boost::asio::dynamic_buffer(std::declval<std::vector<std::byte>&>()))::const_buffers_type;
 	using mutable_buffers_type = decltype(
@@ -170,7 +175,7 @@ public:
 	}
 
 	std::size_t max_size() const {
-		return vb_.raw_vector_.max_size();
+		return max_size_;
 	}
 
 	std::size_t capacity() const {
@@ -187,6 +192,10 @@ public:
 	}
 
 	mutable_buffers_type prepare(std::size_t n) {
+		if(vb_.available_bytes() > max_size_ /*input seq already larger*/ ||
+		   max_size_ - vb_.available_bytes() < n /*too little allowed size left for output seq*/) {
+			throw std::length_error("Requested output sequence too large for max_size.");
+		}
 		vb_.raw_vector_.resize(vb_.size_ + n);
 		return boost::asio::buffer(boost::asio::buffer(vb_.raw_vector_) + vb_.size_, n);
 	}
@@ -199,7 +208,11 @@ public:
 
 template <typename Trim_Policy>
 vector_buffer_dynamic_view<Trim_Policy> vector_buffer<Trim_Policy>::dynamic_view() {
-	return vector_buffer_dynamic_view(*this);
+	return vector_buffer_dynamic_view(*this, raw_vector_.max_size());
+}
+template <typename Trim_Policy>
+vector_buffer_dynamic_view<Trim_Policy> vector_buffer<Trim_Policy>::dynamic_view(std::size_t max_size) {
+	return vector_buffer_dynamic_view(*this, max_size);
 }
 #endif
 
