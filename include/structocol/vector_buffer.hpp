@@ -161,8 +161,9 @@ class vector_buffer_dynamic_view {
 	std::size_t max_size_;
 
 public:
-	explicit vector_buffer_dynamic_view(vector_buffer<Trim_Policy>& vb,
-										std::size_t max_size = vb.raw_vector_.max_size())
+	explicit vector_buffer_dynamic_view(vector_buffer<Trim_Policy>& vb)
+			: vb_{vb}, max_size_{vb.raw_vector_.max_size()} {}
+	explicit vector_buffer_dynamic_view(vector_buffer<Trim_Policy>& vb, std::size_t max_size)
 			: vb_{vb}, max_size_{max_size} {}
 	using const_buffers_type = decltype(
 			boost::asio::dynamic_buffer(std::declval<std::vector<std::byte>&>()))::const_buffers_type;
