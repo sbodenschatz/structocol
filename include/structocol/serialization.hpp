@@ -220,7 +220,7 @@ struct dynamic_container_serializer {
 	static std::size_t size(const T& val) {
 		return std::accumulate(
 				val.begin(), val.end(), structocol::varint_serializer::size(val.size()),
-				[](std::size_t s, const T& val) { return s + structocol::serialized_size(val); });
+				[](std::size_t s, const auto& e) { return s + structocol::serialized_size(e); });
 	}
 };
 
@@ -367,7 +367,7 @@ private:
 	}
 	template <std::size_t... indseq>
 	static std::size_t size_impl(const T& val, std::index_sequence<indseq...>) {
-		return (structocol::serialized_size<boost::pfr::tuple_element_t<indseq, T>>(val) + ...);
+		return (structocol::serialized_size(boost::pfr::get<indseq>(val)) + ...);
 	}
 	template <typename Buff, std::size_t... indseq>
 	static T deserialize_impl(Buff& buffer, std::index_sequence<indseq...>) {
@@ -398,7 +398,8 @@ struct general_serializer<T, std::enable_if_t<std::is_enum_v<T>>> {
 		return structocol::serialized_size<std::underlying_type_t<T>>();
 	}
 	static std::size_t size(const T& val) {
-		return structocol::serialized_size<std::underlying_type_t<T>>(val);
+		return structocol::serialized_size<std::underlying_type_t<T>>(
+				static_cast<std::underlying_type_t<T>>(val));
 	}
 };
 
