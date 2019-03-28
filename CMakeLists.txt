@@ -62,5 +62,11 @@ if(STRUCTOCOL_BUILD_TESTING)
 		$<$<CXX_COMPILER_ID:GNU>: -Wall -Wextra -Werror>
 		$<$<CXX_COMPILER_ID:Clang>: -Wall -Wextra -Werror>
 	)
+	if(NOT STRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT AND TARGET Boost::boost AND WIN32)
+		target_compile_definitions(structocol_unit_tests
+			PRIVATE
+				_WIN32_WINNT=0x0601
+		)
+	endif()
 	catch_discover_tests(structocol_unit_tests)
 endif()
