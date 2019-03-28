@@ -315,12 +315,12 @@ struct general_serializer<T, std::enable_if_t<std::is_aggregate_v<T>>> {
 		return deserialize_impl(buffer, std::make_index_sequence<boost::pfr::tuple_size_v<T>>{});
 	}
 	static constexpr std::size_t size() {
-		return structocol::serialized_size<std::underlying_type_t<T>>();
+		return size_impl(std::make_index_sequence<boost::pfr::tuple_size_v<T>>{});
 	}
 
 private:
 	template <std::size_t... indseq>
-	static constexpr std::size_t size(std::index_sequence<indseq...>) {
+	static constexpr std::size_t size_impl(std::index_sequence<indseq...>) {
 		return (structocol::serialized_size<boost::pfr::tuple_element_t<indseq, T>>() + ...);
 	}
 	template <typename Buff, std::size_t... indseq>
@@ -453,6 +453,9 @@ struct serializer<std::monostate> {
 	template <typename Buff>
 	static std::monostate deserialize(Buff&) {
 		return {};
+	}
+	static constexpr std::size_t size() {
+		return 0;
 	}
 };
 
