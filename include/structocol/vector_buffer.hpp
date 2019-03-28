@@ -21,6 +21,8 @@
 
 namespace structocol {
 
+class vector_buffer_dynamic_view;
+
 class vector_buffer {
 	std::vector<std::byte> raw_vector_;
 	std::size_t read_offset_ = 0;
@@ -103,45 +105,59 @@ public:
 		size_ = 0;
 #endif
 	}
+#ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
+	friend class vector_buffer_dynamic_view;
+	vector_buffer_dynamic_view dynamic_view();
+#endif
+};
 
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
+class vector_buffer_dynamic_view {
+	vector_buffer& vb_;
+
+public:
+	explicit vector_buffer_dynamic_view(vector_buffer& vb) : vb_{vb} {}
 	using const_buffers_type = decltype(
 			boost::asio::dynamic_buffer(std::declval<std::vector<std::byte>&>()))::const_buffers_type;
 	using mutable_buffers_type = decltype(
 			boost::asio::dynamic_buffer(std::declval<std::vector<std::byte>&>()))::mutable_buffers_type;
 
 	std::size_t size() const {
-		return available_bytes();
+		return vb_.available_bytes();
 	}
 
 	std::size_t max_size() const {
-		return raw_vector_.max_size();
+		return vb_.raw_vector_.max_size();
 	}
 
 	std::size_t capacity() const {
-		return total_capacity();
+		return vb_.total_capacity();
 	}
 
 	const_buffers_type data() const {
-		return const_buffers_type(
-				boost::asio::buffer(raw_vector_.data() + read_offset_, raw_vector_.size() - read_offset_));
+		return const_buffers_type(boost::asio::buffer(vb_.raw_vector_.data() + vb_.read_offset_,
+													  vb_.raw_vector_.size() - vb_.read_offset_));
 	}
 
 	void consume(std::size_t n) {
-		read_offset_ = std::min(read_offset_ + n, raw_vector_.size());
+		vb_.read_offset_ = std::min(vb_.read_offset_ + n, vb_.raw_vector_.size());
 	}
 
 	mutable_buffers_type prepare(std::size_t n) {
-		raw_vector_.resize(size_ + n);
-		return boost::asio::buffer(boost::asio::buffer(raw_vector_) + size_, n);
+		vb_.raw_vector_.resize(vb_.size_ + n);
+		return boost::asio::buffer(boost::asio::buffer(vb_.raw_vector_) + vb_.size_, n);
 	}
 
 	void commit(std::size_t n) {
-		size_ += std::min(n, raw_vector_.size() - size_);
-		raw_vector_.resize(size_);
+		vb_.size_ += std::min(n, vb_.raw_vector_.size() - vb_.size_);
+		vb_.raw_vector_.resize(vb_.size_);
 	}
-#endif
 };
+
+inline vector_buffer_dynamic_view vector_buffer::dynamic_view() {
+	return vector_buffer_dynamic_view(*this);
+}
+#endif
 
 } // namespace structocol
 
