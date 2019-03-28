@@ -35,6 +35,7 @@ class protocol_handler {
 
 public:
 	using type_index_t = sufficient_uint_t<sizeof...(Msgs)>;
+	using any_message_t = std::variant<Msgs...>;
 	template <typename Buff, typename Msg>
 	static void send_message(Buff& buffer, const Msg& msg) {
 		constexpr auto type_index = index_of_type_v<Msg, Msgs...>;
@@ -43,7 +44,7 @@ public:
 	}
 
 	template <typename Buff>
-	static std::variant<Msgs...> receive_message(Buff& buffer) {
+	static any_message_t receive_message(Buff& buffer) {
 		receive_impl_ptr<Buff> impl_table[] = {make_receive_impl<Buff, Msgs>()...};
 		auto type_index = deserialize<type_index_t>(buffer);
 		if(type_index >= sizeof...(Msgs)) {
