@@ -14,7 +14,7 @@ if(STRUCTOCOL_BUILD_TESTING)
 	enable_testing()
 endif()
 
-add_library(structocol_dummy
+add_library(structocol_check_build
 		src/structocol/dummy.cpp
 		include/structocol/structocol.hpp
 		include/structocol/protocol_handler.hpp
@@ -30,12 +30,12 @@ target_include_directories(structocol INTERFACE
 	)
 target_compile_features(structocol INTERFACE cxx_std_17)
 target_link_libraries(structocol INTERFACE boost::pfr)
-target_compile_options(structocol_dummy PRIVATE
-		$<$<CXX_COMPILER_ID:MSVC>:/MP /W4 /WX>
+target_compile_options(structocol_check_build PUBLIC
+		$<$<CXX_COMPILER_ID:MSVC>:/MP /W4 /WX /bigobj>
 		$<$<CXX_COMPILER_ID:GNU>: -Wall -Wextra -Werror>
 		$<$<CXX_COMPILER_ID:Clang>: -Wall -Wextra -Werror>
 	)
-target_link_libraries(structocol_dummy PUBLIC structocol)
+target_link_libraries(structocol_check_build PUBLIC structocol)
 
 option(STRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT "Disable optional support for Boost.Asio even if boost could be found." OFF)
 if(NOT STRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT)
@@ -43,6 +43,9 @@ if(NOT STRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT)
 	if(TARGET Boost::boost)
 		target_link_libraries(structocol INTERFACE Boost::boost)
 		target_compile_definitions(structocol INTERFACE STRUCTOCOL_ENABLE_ASIO_SUPPORT)
+		if(WIN32)
+			target_compile_definitions(structocol_check_build PUBLIC _WIN32_WINNT=0x0601)
+		endif()
 	endif()
 endif()
 
@@ -54,19 +57,8 @@ if(STRUCTOCOL_BUILD_TESTING)
 			src/structocol/protocol_handler.test.cpp
 		)
 	target_link_libraries(structocol_unit_tests PUBLIC
-			structocol::structocol
+			structocol_check_build
 			Catch2::Catch2
 		)
-	target_compile_options(structocol_unit_tests PRIVATE
-		$<$<CXX_COMPILER_ID:MSVC>:/MP /bigobj /W4 /WX>
-		$<$<CXX_COMPILER_ID:GNU>: -Wall -Wextra -Werror>
-		$<$<CXX_COMPILER_ID:Clang>: -Wall -Wextra -Werror>
-	)
-	if(NOT STRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT AND TARGET Boost::boost AND WIN32)
-		target_compile_definitions(structocol_unit_tests
-			PRIVATE
-				_WIN32_WINNT=0x0601
-		)
-	endif()
 	catch_discover_tests(structocol_unit_tests)
 endif()
