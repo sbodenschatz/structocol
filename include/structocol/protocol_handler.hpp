@@ -43,6 +43,12 @@ public:
 		serialize(buffer, msg);
 	}
 
+	template <typename Buff, typename Msg>
+	static std::size_t calculate_message_size(Buff& buffer, const Msg& msg) {
+		constexpr auto type_index = index_of_type_v<Msg, Msgs...>;
+		return serialized_size(buffer, type_index_t{type_index}) + serialized_size(buffer, msg);
+	}
+
 	template <typename Buff>
 	static any_message_t receive_message(Buff& buffer) {
 		receive_impl_ptr<Buff> impl_table[] = {make_receive_impl<Buff, Msgs>()...};
