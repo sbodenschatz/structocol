@@ -18,6 +18,7 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <numeric>
 #include <optional>
 #include <set>
 #include <stdexcept>
@@ -50,6 +51,8 @@ template <typename T, typename Buff>
 T deserialize(Buff& buffer);
 template <typename T>
 constexpr std::size_t serialized_size();
+template <typename T>
+std::size_t serialized_size(const T& val);
 
 template <typename T>
 struct single_byte_serializer {
@@ -63,6 +66,9 @@ struct single_byte_serializer {
 	}
 	static constexpr std::size_t size() {
 		return 1;
+	}
+	static constexpr std::size_t size(const T&) {
+		return size();
 	}
 };
 
@@ -96,6 +102,9 @@ struct integral_big_endian_serializer {
 
 	static constexpr std::size_t size() {
 		return sizeof(T);
+	}
+	static constexpr std::size_t size(const T&) {
+		return size();
 	}
 
 private:
@@ -137,6 +146,9 @@ struct floating_point_serializer {
 	static constexpr std::size_t size() {
 		return sizeof(T);
 	}
+	static constexpr std::size_t size(const T&) {
+		return size();
+	}
 };
 
 struct varint_serializer {
@@ -162,6 +174,11 @@ struct varint_serializer {
 			val = (val << 7) | (vbval & 0b0111'1111);
 		}
 		return val;
+	}
+	static std::size_t size(std::size_t val) {
+		int bits = required_bits(val);
+		int varbytes = bits / 7 + ((bits % 7) ? 1 : 0);
+		return varbytes;
 	}
 
 private:
@@ -200,6 +217,11 @@ struct dynamic_container_serializer {
 		}
 		return val;
 	}
+	static std::size_t size(const T& val) {
+		return std::accumulate(
+				val.begin(), val.end(), structocol::varint_serializer::size(val.size()),
+				[](std::size_t s, const T& val) { return s + structocol::serialized_size(val); });
+	}
 };
 
 template <typename... T>
@@ -214,6 +236,9 @@ struct tuple_serializer {
 	}
 	static constexpr std::size_t size() {
 		return (structocol::serialized_size<T>() + ...);
+	}
+	static constexpr std::size_t size(const std::tuple<T...>&) {
+		return size();
 	}
 
 private:
@@ -247,6 +272,9 @@ struct pair_serializer {
 	static constexpr std::size_t size() {
 		return structocol::serialized_size<FT>() + structocol::serialized_size<ST>();
 	}
+	static constexpr std::size_t size(const std::pair<FT, ST>&) {
+		return size();
+	}
 };
 
 template <typename... T>
@@ -261,6 +289,10 @@ struct variant_serializer {
 		auto index = structocol::deserialize<index_type>(buffer);
 		deserialze_impl_ptr<Buff> impl_table[] = {make_deserialize_impl<Buff, T>()...};
 		return impl_table[index](buffer);
+	}
+	static std::size_t size(const std::variant<T...>& val) {
+		return structocol::serialized_size(index_type(val.index())) +
+			   std::visit([](const auto& v) { return structocol::serialized_size(v); }, val);
 	}
 
 private:
@@ -293,6 +325,13 @@ struct optional_serializer {
 			return std::nullopt;
 		}
 	}
+	static std::size_t size(const std::optional<T>& val) {
+		auto s = structocol::serialized_size(val.has_value());
+		if(val.has_value()) {
+			s += structocol::serialized_size(*val);
+		}
+		return s;
+	}
 };
 
 namespace detail {
@@ -317,11 +356,18 @@ struct general_serializer<T, std::enable_if_t<std::is_aggregate_v<T>>> {
 	static constexpr std::size_t size() {
 		return size_impl(std::make_index_sequence<boost::pfr::tuple_size_v<T>>{});
 	}
+	static std::size_t size(const T& val) {
+		return size_impl(val, std::make_index_sequence<boost::pfr::tuple_size_v<T>>{});
+	}
 
 private:
 	template <std::size_t... indseq>
 	static constexpr std::size_t size_impl(std::index_sequence<indseq...>) {
 		return (structocol::serialized_size<boost::pfr::tuple_element_t<indseq, T>>() + ...);
+	}
+	template <std::size_t... indseq>
+	static std::size_t size_impl(const T& val, std::index_sequence<indseq...>) {
+		return (structocol::serialized_size<boost::pfr::tuple_element_t<indseq, T>>(val) + ...);
 	}
 	template <typename Buff, std::size_t... indseq>
 	static T deserialize_impl(Buff& buffer, std::index_sequence<indseq...>) {
@@ -350,6 +396,9 @@ struct general_serializer<T, std::enable_if_t<std::is_enum_v<T>>> {
 	}
 	static constexpr std::size_t size() {
 		return structocol::serialized_size<std::underlying_type_t<T>>();
+	}
+	static std::size_t size(const T& val) {
+		return structocol::serialized_size<std::underlying_type_t<T>>(val);
 	}
 };
 
@@ -457,6 +506,9 @@ struct serializer<std::monostate> {
 	static constexpr std::size_t size() {
 		return 0;
 	}
+	static constexpr std::size_t size(const std::monostate&) {
+		return 0;
+	}
 };
 
 template <typename Buff, typename T>
@@ -471,6 +523,11 @@ T deserialize(Buff& buffer) {
 template <typename T>
 constexpr std::size_t serialized_size() {
 	return serializer<std::remove_const_t<T>>::size();
+}
+
+template <typename T>
+std::size_t serialized_size(const T& val) {
+	return serializer<std::remove_const_t<T>>::size(val);
 }
 
 } // namespace structocol
