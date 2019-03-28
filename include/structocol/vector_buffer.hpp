@@ -165,10 +165,8 @@ public:
 			: vb_{vb}, max_size_{vb.raw_vector_.max_size()} {}
 	explicit vector_buffer_dynamic_view(vector_buffer<Trim_Policy>& vb, std::size_t max_size)
 			: vb_{vb}, max_size_{max_size} {}
-	using const_buffers_type = decltype(
-			boost::asio::dynamic_buffer(std::declval<std::vector<std::byte>&>()))::const_buffers_type;
-	using mutable_buffers_type = decltype(
-			boost::asio::dynamic_buffer(std::declval<std::vector<std::byte>&>()))::mutable_buffers_type;
+	using const_buffers_type = boost::asio::BOOST_ASIO_CONST_BUFFER;
+	using mutable_buffers_type = boost::asio::BOOST_ASIO_MUTABLE_BUFFER;
 
 	std::size_t size() const {
 		return vb_.available_bytes();
