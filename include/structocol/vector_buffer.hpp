@@ -21,9 +21,44 @@
 
 namespace structocol {
 
+template <typename Trim_Policy>
 class vector_buffer_dynamic_view;
 
-class vector_buffer {
+namespace vector_buffer_policies {
+class manual_trim_only {
+protected:
+	bool trim_policy_hook(std::size_t) {
+		return false;
+	}
+};
+template <std::size_t threshold = 0x10000u>
+class fixed_auto_trim {
+protected:
+	bool trim_policy_hook(std::size_t current) {
+		return current >= threshold;
+	}
+};
+class dynamic_auto_trim {
+private:
+	std::size_t threshold_ = 0x10000u;
+
+public:
+	std::size_t auto_trim_threshold() const {
+		return threshold_;
+	}
+	void auto_trim_threshold(std::size_t threshold) {
+		threshold_ = threshold;
+	}
+
+protected:
+	bool trim_policy_hook(std::size_t current) {
+		return current >= threshold_;
+	}
+};
+} // namespace vector_buffer_policies
+
+template <typename Trim_Policy = vector_buffer_policies::fixed_auto_trim<>>
+class vector_buffer : public Trim_Policy {
 	std::vector<std::byte> raw_vector_;
 	std::size_t read_offset_ = 0;
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
@@ -56,9 +91,11 @@ public:
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
 		assert(raw_vector_.size() == size_ &&
 			   "write MUST NOT be called when there are prepare()d but not commit()ed writes.");
+		if(Trim_Policy::trim_policy_hook(read_offset_)) trim();
 		raw_vector_.insert(raw_vector_.end(), data.begin(), data.end());
 		size_ = raw_vector_.size();
 #else
+		if(Trim_Policy::trim_policy_hook(read_offset_)) trim();
 		raw_vector_.insert(raw_vector_.end(), data.begin(), data.end());
 #endif
 	}
@@ -71,6 +108,10 @@ public:
 	}
 
 	void trim() noexcept {
+#ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
+		assert(raw_vector_.size() == size_ &&
+			   "trim MUST NOT be called when there are prepare()d but not commit()ed writes.");
+#endif
 		raw_vector_.erase(raw_vector_.begin(), raw_vector_.begin() + read_offset_);
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
 		size_ -= read_offset_;
@@ -106,17 +147,19 @@ public:
 #endif
 	}
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
+	template <typename Trim_Policy_>
 	friend class vector_buffer_dynamic_view;
-	vector_buffer_dynamic_view dynamic_view();
+	vector_buffer_dynamic_view<Trim_Policy> dynamic_view();
 #endif
 };
 
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
+template <typename Trim_Policy>
 class vector_buffer_dynamic_view {
-	vector_buffer& vb_;
+	vector_buffer<Trim_Policy>& vb_;
 
 public:
-	explicit vector_buffer_dynamic_view(vector_buffer& vb) : vb_{vb} {}
+	explicit vector_buffer_dynamic_view(vector_buffer<Trim_Policy>& vb) : vb_{vb} {}
 	using const_buffers_type = decltype(
 			boost::asio::dynamic_buffer(std::declval<std::vector<std::byte>&>()))::const_buffers_type;
 	using mutable_buffers_type = decltype(
@@ -154,7 +197,8 @@ public:
 	}
 };
 
-inline vector_buffer_dynamic_view vector_buffer::dynamic_view() {
+template <typename Trim_Policy>
+vector_buffer_dynamic_view<Trim_Policy> vector_buffer<Trim_Policy>::dynamic_view() {
 	return vector_buffer_dynamic_view(*this);
 }
 #endif
