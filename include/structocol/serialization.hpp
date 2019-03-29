@@ -354,8 +354,10 @@ template <typename T>
 struct general_serializer<T, std::enable_if_t<std::is_aggregate_v<T>>> {
 	template <typename Buff>
 	static void serialize(Buff& buffer, const T& val) {
-		boost::pfr::for_each_field(val,
-								   [&buffer](const auto& field) { structocol::serialize(buffer, field); });
+		if constexpr (boost::pfr::tuple_size_v < T >> 0) {
+			boost::pfr::for_each_field(val,
+				[&buffer](const auto& field) { structocol::serialize(buffer, field); });
+		}
 	}
 	template <typename Buff>
 	static T deserialize(Buff& buffer) {
@@ -371,11 +373,11 @@ struct general_serializer<T, std::enable_if_t<std::is_aggregate_v<T>>> {
 private:
 	template <std::size_t... indseq>
 	static constexpr std::size_t size_impl(std::index_sequence<indseq...>) {
-		return (structocol::serialized_size<boost::pfr::tuple_element_t<indseq, T>>() + ...);
+		return (structocol::serialized_size<boost::pfr::tuple_element_t<indseq, T>>() + ... + 0);
 	}
 	template <std::size_t... indseq>
 	static std::size_t size_impl(const T& val, std::index_sequence<indseq...>) {
-		return (structocol::serialized_size(boost::pfr::get<indseq>(val)) + ...);
+		return (structocol::serialized_size(boost::pfr::get<indseq>(val)) + ... + 0);
 	}
 	template <typename Buff, std::size_t... indseq>
 	static T deserialize_impl(Buff& buffer, std::index_sequence<indseq...>) {
@@ -383,7 +385,7 @@ private:
 		// return T{deserialize<boost::pfr::tuple_element_t<indseq, T>>(buffer)...};
 		std::tuple<std::optional<boost::pfr::tuple_element_t<indseq, T>>...> elements;
 		// Fold over comma is correctly sequenced left to right:
-		(deserialize_element<boost::pfr::tuple_element_t<indseq, T>, indseq>(buffer, elements), ...);
+		(deserialize_element<boost::pfr::tuple_element_t<indseq, T>, indseq>(buffer, elements), ..., (void)0);
 		return T{std::move(*std::get<indseq>(elements))...};
 	}
 	template <typename ElemT, std::size_t index, typename Buff, typename Tup>
