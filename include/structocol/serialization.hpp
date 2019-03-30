@@ -343,6 +343,52 @@ struct optional_serializer {
 };
 
 namespace detail {
+	template<typename T>
+	struct array_helper {};
+
+	template <typename T, std::size_t N>
+	struct array_helper<T[N]> {
+		using type = T;
+		constexpr static std::size_t size = N;
+	};
+
+	template <typename T, std::size_t N>
+	struct array_helper<std::array<T,N>> {
+		using type = T;
+		constexpr static std::size_t size = N;
+	};
+}
+
+template <typename T>
+struct array_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, const T& val) {
+		for (const auto& e : val) {
+			structocol::serialize(buffer,e);
+		}
+	}
+	template <typename Buff>
+	static T deserialize(Buff& buffer) {
+		return deserialize_impl(buffer, std::make_index_sequence<detail::array_helper<T>::size>{});
+	}
+	constexpr static std::size_t size(const T& val) {
+		return std::size(val);
+	}
+	constexpr static std::size_t size() {
+		return detail::array_helper<T>::size;
+	}
+private:
+	template <typename Buff, std::size_t... indseq>
+	static T deserialize_impl(Buff& buffer, std::index_sequence<indseq...>) {
+		std::array<std::optional<detail::array_helper<T>::type>, detail::array_helper<T>::size> elements;
+		for (auto& e: elements) {
+			e = structocol::deserialize<detail::array_helper<T>::type>(buffer);
+		}
+		return T{ std::move(*std::get<indseq>(elements))... };
+	}
+};
+
+namespace detail {
 template <typename T, typename Enable = void>
 struct general_serializer {
 	static_assert(sizeof(T) == -1, // Always false but depends on T
@@ -521,6 +567,11 @@ struct serializer<std::monostate> {
 		return 0;
 	}
 };
+
+template<typename T, std::size_t N>
+struct serializer<T[N]> : array_serializer<T[N]> {};
+template<typename T, std::size_t N>
+struct serializer<std::array<T, N>> : array_serializer<std::array<T,N>> {};
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
