@@ -380,9 +380,9 @@ struct array_serializer {
 private:
 	template <typename Buff, std::size_t... indseq>
 	static T deserialize_impl(Buff& buffer, std::index_sequence<indseq...>) {
-		std::array<std::optional<detail::array_helper<T>::type>, detail::array_helper<T>::size> elements;
+		std::array<std::optional<typename detail::array_helper<T>::type>, detail::array_helper<T>::size> elements;
 		for (auto& e: elements) {
-			e = structocol::deserialize<detail::array_helper<T>::type>(buffer);
+			e = structocol::deserialize<typename detail::array_helper<T>::type>(buffer);
 		}
 		return T{ std::move(*std::get<indseq>(elements))... };
 	}
