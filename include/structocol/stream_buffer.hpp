@@ -33,7 +33,7 @@ public:
 		std::array<std::byte, bytes> buf;
 		stream_.read(reinterpret_cast<char*>(buf.data()), buf.size());
 		if(!stream_) {
-			std::nullopt;
+			return std::nullopt;
 		}
 		return buf;
 	}
