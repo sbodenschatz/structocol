@@ -60,8 +60,7 @@ constexpr auto sufficient_uint_helper() {
 
 template <std::int64_t val>
 constexpr auto sufficient_int_helper() {
-	if constexpr(std::numeric_limits<std::int8_t>::min() <= val &&
-				 val <= std::numeric_limits<std::int8_t>::max()) {
+	if constexpr(std::numeric_limits<std::int8_t>::min() <= val && val <= std::numeric_limits<std::int8_t>::max()) {
 		return std::int8_t{};
 	} else if constexpr(std::numeric_limits<std::int16_t>::min() <= val &&
 						val <= std::numeric_limits<std::int16_t>::max()) {

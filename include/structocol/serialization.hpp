@@ -126,15 +126,12 @@ private:
 	}
 };
 
-static_assert(
-		std::numeric_limits<float>::is_iec559,
-		"(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
-static_assert(
-		std::numeric_limits<double>::is_iec559,
-		"(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
-static_assert(
-		std::numeric_limits<long double>::is_iec559,
-		"(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
+static_assert(std::numeric_limits<float>::is_iec559,
+			  "(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
+static_assert(std::numeric_limits<double>::is_iec559,
+			  "(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
+static_assert(std::numeric_limits<long double>::is_iec559,
+			  "(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
 
 template <typename T>
 struct floating_point_serializer {
@@ -226,9 +223,8 @@ struct dynamic_container_serializer {
 		return val;
 	}
 	static std::size_t size(const T& val) {
-		return std::accumulate(
-				val.begin(), val.end(), structocol::varint_serializer::size(val.size()),
-				[](std::size_t s, const auto& e) { return s + structocol::serialized_size(e); });
+		return std::accumulate(val.begin(), val.end(), structocol::varint_serializer::size(val.size()),
+							   [](std::size_t s, const auto& e) { return s + structocol::serialized_size(e); });
 	}
 };
 
@@ -343,28 +339,28 @@ struct optional_serializer {
 };
 
 namespace detail {
-	template<typename T>
-	struct array_helper {};
+template <typename T>
+struct array_helper {};
 
-	template <typename T, std::size_t N>
-	struct array_helper<T[N]> {
-		using type = T;
-		constexpr static std::size_t size = N;
-	};
+template <typename T, std::size_t N>
+struct array_helper<T[N]> {
+	using type = T;
+	constexpr static std::size_t size = N;
+};
 
-	template <typename T, std::size_t N>
-	struct array_helper<std::array<T,N>> {
-		using type = T;
-		constexpr static std::size_t size = N;
-	};
-}
+template <typename T, std::size_t N>
+struct array_helper<std::array<T, N>> {
+	using type = T;
+	constexpr static std::size_t size = N;
+};
+} // namespace detail
 
 template <typename T>
 struct array_serializer {
 	template <typename Buff>
 	static void serialize(Buff& buffer, const T& val) {
-		for (const auto& e : val) {
-			structocol::serialize(buffer,e);
+		for(const auto& e : val) {
+			structocol::serialize(buffer, e);
 		}
 	}
 	template <typename Buff>
@@ -377,14 +373,15 @@ struct array_serializer {
 	constexpr static std::size_t size() {
 		return detail::array_helper<T>::size;
 	}
+
 private:
 	template <typename Buff, std::size_t... indseq>
 	static T deserialize_impl(Buff& buffer, std::index_sequence<indseq...>) {
 		std::array<std::optional<typename detail::array_helper<T>::type>, detail::array_helper<T>::size> elements;
-		for (auto& e: elements) {
+		for(auto& e : elements) {
 			e = structocol::deserialize<typename detail::array_helper<T>::type>(buffer);
 		}
-		return T{ std::move(*std::get<indseq>(elements))... };
+		return T{std::move(*std::get<indseq>(elements))...};
 	}
 };
 
@@ -456,8 +453,7 @@ struct general_serializer<T, std::enable_if_t<std::is_enum_v<T>>> {
 		return structocol::serialized_size<std::underlying_type_t<T>>();
 	}
 	static std::size_t size(const T& val) {
-		return structocol::serialized_size<std::underlying_type_t<T>>(
-				static_cast<std::underlying_type_t<T>>(val));
+		return structocol::serialized_size<std::underlying_type_t<T>>(static_cast<std::underlying_type_t<T>>(val));
 	}
 };
 
@@ -570,10 +566,10 @@ struct serializer<std::monostate> {
 	}
 };
 
-template<typename T, std::size_t N>
+template <typename T, std::size_t N>
 struct serializer<T[N]> : array_serializer<T[N]> {};
-template<typename T, std::size_t N>
-struct serializer<std::array<T, N>> : array_serializer<std::array<T,N>> {};
+template <typename T, std::size_t N>
+struct serializer<std::array<T, N>> : array_serializer<std::array<T, N>> {};
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {

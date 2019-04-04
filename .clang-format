@@ -11,7 +11,7 @@ AllowShortLoopsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: true
-ColumnLimit:     110
+ColumnLimit:     120
 AlwaysBreakTemplateDeclarations: true
 ContinuationIndentWidth: 8
 ConstructorInitializerAllOnOneLineOrOnePerLine: false

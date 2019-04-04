@@ -48,7 +48,7 @@ public:
 	template <std::size_t bytes>
 	void write(const std::array<std::byte, bytes>& data) {
 		stream_.write(reinterpret_cast<const char*>(data.data()), data.size());
-		if (!stream_) throw std::runtime_error("Couldn't write the given amount of bytes.");
+		if(!stream_) throw std::runtime_error("Couldn't write the given amount of bytes.");
 	}
 };
 
