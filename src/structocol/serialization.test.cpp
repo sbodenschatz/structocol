@@ -314,3 +314,17 @@ TEST_CASE("serialization and deserialization of enums (enum class) preserves val
 	auto outval = structocol::deserialize<test_enum>(vb);
 	REQUIRE(inval == outval);
 }
+
+namespace {
+	struct empty_aggregate{};
+}
+
+TEST_CASE("Empty aggregates are serialized as a zero-length byte sequence","[serialization]") {
+	auto inval = empty_aggregate{};
+	structocol::vector_buffer vb;
+	structocol::serialize(vb, inval);
+	REQUIRE(vb.available_bytes() == 0);
+	[[maybe_unused]]
+	auto outval = structocol::deserialize<empty_aggregate>(vb);
+	REQUIRE(vb.available_bytes() == 0);
+}
