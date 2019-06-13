@@ -25,9 +25,9 @@ class protocol_handler {
 	}
 
 	template <typename Buff>
-	using receive_impl_ptr = std::variant<Msgs...> (*)(Buff&);
+	using decode_impl_ptr = std::variant<Msgs...> (*)(Buff&);
 	template <typename Buff, typename Msg>
-	static receive_impl_ptr<Buff> make_receive_impl() {
+	static decode_impl_ptr<Buff> make_decode_impl() {
 		return [](Buff & buffer) -> std::variant<Msgs...> {
 			return deserialize<Msg>(buffer);
 		};
@@ -37,7 +37,7 @@ public:
 	using type_index_t = sufficient_uint_t<sizeof...(Msgs)>;
 	using any_message_t = std::variant<Msgs...>;
 	template <typename Buff, typename Msg>
-	static void send_message(Buff& buffer, const Msg& msg) {
+	static void encode_message(Buff& buffer, const Msg& msg) {
 		constexpr auto type_index = index_of_type_v<Msg, Msgs...>;
 		serialize(buffer, type_index_t{type_index});
 		serialize(buffer, msg);
@@ -50,8 +50,8 @@ public:
 	}
 
 	template <typename Buff>
-	static any_message_t receive_message(Buff& buffer) {
-		receive_impl_ptr<Buff> impl_table[] = {make_receive_impl<Buff, Msgs>()...};
+	static any_message_t decode_message(Buff& buffer) {
+		decode_impl_ptr<Buff> impl_table[] = {make_decode_impl<Buff, Msgs>()...};
 		auto type_index = deserialize<type_index_t>(buffer);
 		if(type_index >= sizeof...(Msgs)) {
 			throw std::invalid_argument("Invalid message type.");

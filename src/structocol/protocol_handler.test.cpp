@@ -34,7 +34,7 @@ bool operator==(const score_board_msg& a, const score_board_msg& b) {
 }
 } // namespace
 
-TEST_CASE("protocol handler message stream arrives (receive_message) as it was sent", "[protocol_handler]") {
+TEST_CASE("protocol handler message stream arrives (using decode_message) as it was sent", "[protocol_handler]") {
 	using msg_t = std::variant<hello_msg, lobby_msg, enter_result_msg, score_board_msg>;
 	std::vector<msg_t> msg_seq{hello_msg{"John Doe"}, lobby_msg{{"John Doe", "Jane Smith"}},
 							   enter_result_msg{"John Doe", 9001},
@@ -42,12 +42,12 @@ TEST_CASE("protocol handler message stream arrives (receive_message) as it was s
 	structocol::protocol_handler<hello_msg, lobby_msg, enter_result_msg, score_board_msg> ph;
 	structocol::vector_buffer vb;
 	for(const auto& mvar : msg_seq) {
-		std::visit([&ph, &vb](const auto& m) { ph.send_message(vb, m); }, mvar);
+		std::visit([&ph, &vb](const auto& m) { ph.encode_message(vb, m); }, mvar);
 	}
 
 	std::vector<msg_t> msg_seq_recv;
 	for(std::size_t i = 0; i < msg_seq.size(); ++i) {
-		msg_seq_recv.push_back(ph.receive_message(vb));
+		msg_seq_recv.push_back(ph.decode_message(vb));
 	}
 	REQUIRE(msg_seq_recv == msg_seq);
 }
@@ -60,7 +60,7 @@ TEST_CASE("protocol handler message stream arrives (using process_message) as it
 	structocol::protocol_handler<hello_msg, lobby_msg, enter_result_msg, score_board_msg> ph;
 	structocol::vector_buffer vb;
 	for(const auto& mvar : msg_seq) {
-		std::visit([&ph, &vb](const auto& m) { ph.send_message(vb, m); }, mvar);
+		std::visit([&ph, &vb](const auto& m) { ph.encode_message(vb, m); }, mvar);
 	}
 
 	std::vector<msg_t> msg_seq_proc;
