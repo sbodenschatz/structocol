@@ -50,7 +50,23 @@ decltype(auto) async_read_multiplexed(AsyncReadStream& stream, Buffer& buffer, C
 	return res.get();
 }
 
-void async_process_multiplexed() {}
+template <typename LenghtFieldType, typename ProtocolHandler, typename AsyncReadStream, typename Buffer,
+		  typename Handler, typename ErrorHandler>
+void async_process_multiplexed(AsyncReadStream& stream, Buffer& buffer, Handler&& handler,
+							   ErrorHandler&& error_handler) {
+	auto executor = boost::asio::get_associated_executor(handler, stream.get_executor());
+	async_read_multiplexed(
+			stream, buffer,
+			boost::asio::bind_executor(executor, [&buffer, handler = std::forward<Handler>(handler),
+												  error_handler = std::forward<ErrorHandler>(error_handler)](
+														 boost::system::error_code ec, std::size_t) {
+				if(ec) {
+					error_handler(ec);
+				} else {
+					ProtocolHandler::process_message(buffer, std::move(handler));
+				}
+			}));
+}
 
 } // namespace structocol
 
