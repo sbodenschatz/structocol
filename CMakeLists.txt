@@ -24,6 +24,7 @@ add_library(structocol_check_build
 		include/structocol/vector_buffer.hpp
 		include/structocol/type_utilities.hpp
 		include/structocol/stream_buffer.hpp
+		include/structocol/multiplexing.hpp	
 	)
 add_library(structocol INTERFACE)
 add_library(structocol::structocol ALIAS structocol)
