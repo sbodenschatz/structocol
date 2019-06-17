@@ -5,6 +5,7 @@
 
 #include "serialization.hpp"
 #include <boost/asio/associated_executor.hpp>
+#include <boost/asio/bind_executor.hpp>
 #include <boost/asio/read.hpp>
 
 namespace structocol {
