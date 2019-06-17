@@ -11,5 +11,6 @@
 #include "serialization.hpp"
 #include "type_utilities.hpp"
 #include "vector_buffer.hpp"
+#include "multiplexing.hpp"
 
 #endif // STRUCTOCOL_MAIN_HEADER_INCLUDED
