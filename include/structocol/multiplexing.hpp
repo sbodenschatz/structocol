@@ -9,6 +9,7 @@
 
 namespace structocol {
 
+namespace detail {
 template <typename MainIOObject, typename ItermediateCompletionHandler, typename Executor>
 struct composed_async_op : ItermediateCompletionHandler {
 	MainIOObject& main_io_object;
@@ -24,6 +25,8 @@ template <typename MainIOObject, typename CompletionHandler, typename Executor>
 composed_async_op(CompletionHandler, MainIOObject&, Executor)
 		->composed_async_op<MainIOObject, CompletionHandler, Executor>;
 
+} // namespace detail
+
 template <typename LenghtFieldType, typename AsyncReadStream, typename Buffer, typename CompletionToken>
 decltype(auto) async_read_multiplexed(AsyncReadStream& stream, Buffer& buffer, CompletionToken&& ct) {
 	using signature_type = void(boost::system::error_code ec, std::size_t);
@@ -32,18 +35,18 @@ decltype(auto) async_read_multiplexed(AsyncReadStream& stream, Buffer& buffer, C
 	handler_type handler(std::forward<CompletionToken>(ct));
 	result_type res(handler);
 	auto executor = boost::asio::get_associated_executor(handler, stream.get_executor());
-	boost::asio::async_read(stream, buffer.dynamic_view(structocol::serialized_size<LenghtFieldType>()),
-							composed_async_op{[handler = std::move(handler), &buffer,
-											   &stream](boost::system::error_code ec, std::size_t) {
-												  if(ec)
-													  handler(ec, 0);
-												  else {
-													  auto length = structocol::deserialize<LenghtFieldType>(buffer);
-													  boost::asio::async_read(stream, buffer.dynamic_view(length),
-																			  std::move(handler));
-												  }
-											  },
-											  stream, std::move(executor)});
+	boost::asio::async_read(
+			stream, buffer.dynamic_view(structocol::serialized_size<LenghtFieldType>()),
+			detail::composed_async_op{
+					[handler = std::move(handler), &buffer, &stream](boost::system::error_code ec, std::size_t) {
+						if(ec)
+							handler(ec, 0);
+						else {
+							auto length = structocol::deserialize<LenghtFieldType>(buffer);
+							boost::asio::async_read(stream, buffer.dynamic_view(length), std::move(handler));
+						}
+					},
+					stream, std::move(executor)});
 	return res.get();
 }
 
