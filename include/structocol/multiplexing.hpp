@@ -68,6 +68,16 @@ void async_process_multiplexed(AsyncReadStream& stream, Buffer& buffer, Handler&
 			}));
 }
 
+template <typename ProtocolHandler, typename LengthFieldType, typename MessageType, typename Buffer>
+void encode_message_multiplexed(Buffer& buffer, const MessageType& msg) {
+	auto len = ProtocolHandler::calculate_message_size(msg);
+	if(len > std::numeric_limits<LengthFieldType>::max()) {
+		throw std::length_error("Message too long for given length type.");
+	}
+	structocol::serialize(buffer, static_cast<LengthFieldType>(len));
+	ProtocolHandler::encode_message(buffer, msg);
+}
+
 } // namespace structocol
 
 #endif // STRUCTOCOL_ENABLE_ASIO_SUPPORT
