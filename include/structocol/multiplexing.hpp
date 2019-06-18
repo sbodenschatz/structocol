@@ -11,9 +11,8 @@
 namespace structocol {
 
 namespace detail {
-template <typename MainIOObject, typename ItermediateCompletionHandler, typename Executor>
+template <typename ItermediateCompletionHandler, typename Executor>
 struct composed_async_op : ItermediateCompletionHandler {
-	MainIOObject& main_io_object;
 	Executor executor;
 	using ItermediateCompletionHandler::operator();
 	using executor_type = Executor;
@@ -22,9 +21,9 @@ struct composed_async_op : ItermediateCompletionHandler {
 	}
 };
 
-template <typename MainIOObject, typename CompletionHandler, typename Executor>
-composed_async_op(CompletionHandler, MainIOObject&, Executor)
-		->composed_async_op<MainIOObject, CompletionHandler, Executor>;
+template <typename CompletionHandler, typename Executor>
+composed_async_op(CompletionHandler, Executor)
+		->composed_async_op<CompletionHandler, Executor>;
 
 } // namespace detail
 
@@ -47,7 +46,7 @@ decltype(auto) async_read_multiplexed(AsyncReadStream& stream, Buffer& buffer, C
 							boost::asio::async_read(stream, buffer.dynamic_view(length), std::move(handler));
 						}
 					},
-					stream, std::move(executor)});
+					std::move(executor)});
 	return res.get();
 }
 
