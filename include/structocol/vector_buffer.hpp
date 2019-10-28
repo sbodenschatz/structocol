@@ -16,7 +16,14 @@
 #include <vector>
 
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812)
+#endif
 #include <boost/asio/buffer.hpp>
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 #endif
 
 namespace structocol {
