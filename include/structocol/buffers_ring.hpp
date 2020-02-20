@@ -1,7 +1,9 @@
 #ifndef STRUCTOCOL_BUFFERS_RING_INCLUDED
 #define STRUCTOCOL_BUFFERS_RING_INCLUDED
 
+#include "type_utilities.hpp"
 #include <deque>
+#include <type_traits>
 
 namespace structocol {
 
