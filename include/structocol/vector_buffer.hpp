@@ -72,6 +72,10 @@ class vector_buffer : public Trim_Policy {
 	std::size_t size_ = 0;
 #endif
 
+	void auto_trim_if_policy_requests() {
+		if(Trim_Policy::trim_policy_hook(read_offset_)) trim();
+	}
+
 public:
 	template <std::size_t bytes>
 	std::array<std::byte, bytes> read() {
@@ -98,7 +102,7 @@ public:
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
 		assert(raw_vector_.size() == size_ &&
 			   "write MUST NOT be called when there are prepare()d but not commit()ed writes.");
-		if(Trim_Policy::trim_policy_hook(read_offset_)) trim();
+		auto_trim_if_policy_requests();
 		raw_vector_.insert(raw_vector_.end(), data.begin(), data.end());
 		size_ = raw_vector_.size();
 #else
@@ -201,6 +205,7 @@ public:
 		   max_size_ - vb_.available_bytes() < n /*too little allowed size left for output seq*/) {
 			throw std::length_error("Requested output sequence too large for max_size.");
 		}
+		if(vb_.raw_vector_.size() == vb_.size_) vb_.auto_trim_if_policy_requests();
 		vb_.raw_vector_.resize(vb_.size_ + n);
 		return boost::asio::buffer(boost::asio::buffer(vb_.raw_vector_) + vb_.size_, n);
 	}
