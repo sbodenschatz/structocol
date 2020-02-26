@@ -4,9 +4,19 @@
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
 
 #include "serialization.hpp"
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 26812 28251 26451 26495 6387 6258 6001)
+#endif
+
 #include <boost/asio/associated_executor.hpp>
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/read.hpp>
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 namespace structocol {
 
@@ -22,8 +32,7 @@ struct composed_async_op : ItermediateCompletionHandler {
 };
 
 template <typename CompletionHandler, typename Executor>
-composed_async_op(CompletionHandler, Executor)
-		->composed_async_op<CompletionHandler, Executor>;
+composed_async_op(CompletionHandler, Executor)->composed_async_op<CompletionHandler, Executor>;
 
 } // namespace detail
 
