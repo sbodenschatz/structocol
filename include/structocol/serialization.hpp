@@ -191,10 +191,15 @@ private:
 #if defined(__clang__) || defined(__GNUC__)
 		unsigned long long v{val | 1};
 		return CHAR_BIT * sizeof(val) - __builtin_clzll(v);
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_WIN64)
 		unsigned __int64 v{val | 1};
 		unsigned long index = 0;
 		_BitScanReverse64(&index, v);
+		return index + 1;
+#elif defined(_MSC_VER) && !defined(_WIN64)
+		unsigned long v{val | 1};
+		unsigned long index = 0;
+		_BitScanReverse(&index, v);
 		return index + 1;
 #else
 		int num = 1;
