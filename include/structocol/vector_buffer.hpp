@@ -192,7 +192,7 @@ public:
 	}
 
 	const_buffers_type data() const {
-		return const_buffers_type(boost::asio::buffer(vb_.raw_vector_.data() + vb_.read_offset_,
+		return const_buffers_type(boost::asio::buffer(boost::asio::buffer(vb_.raw_vector_) + vb_.read_offset_,
 													  vb_.raw_vector_.size() - vb_.read_offset_));
 	}
 
