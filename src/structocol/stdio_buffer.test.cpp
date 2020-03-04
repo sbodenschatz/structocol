@@ -119,3 +119,27 @@ TEST_CASE("stdio_buffer can read back data written to it (interleaved)", "[stdio
 		cr.check();
 	}
 }
+
+TEST_CASE("Reading from a stdio_buffer on a file at eof fails as expected.", "[stdio_buffer]") {
+	std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "w+b"),
+																	[](std::FILE* f) { std::fclose(f); }};
+	structocol::stdio_buffer iob(file_handle.get());
+	SECTION("using read() on an empty file") {
+		CHECK_THROWS_AS(iob.read<1>(), std::runtime_error);
+	}
+	SECTION("using try_read() on an empty file") {
+		auto res = iob.try_read<1>();
+		CHECK(!res.has_value());
+	}
+	SECTION("using read() when the position is at end after writing something") {
+		iob.write(std::array{std::byte('T'), std::byte('e'), std::byte('s'), std::byte('t')});
+		std::fflush(file_handle.get());
+		CHECK_THROWS_AS(iob.read<1>(), std::runtime_error);
+	}
+	SECTION("using try_read() when the position is at end after writing something") {
+		iob.write(std::array{std::byte('T'), std::byte('e'), std::byte('s'), std::byte('t')});
+		std::fflush(file_handle.get());
+		auto res = iob.try_read<1>();
+		CHECK(!res.has_value());
+	}
+}
