@@ -17,8 +17,19 @@ static std::enable_if_t<!has_clear_member_v<T>> clear_user_data(T& user_data) {
 	user_data = {};
 }
 
+struct buffers_ring_element_no_copy {
+	constexpr buffers_ring_element_no_copy() = default;
+	constexpr buffers_ring_element_no_copy(const buffers_ring_element_no_copy&) noexcept = delete;
+	constexpr buffers_ring_element_no_copy& operator=(const buffers_ring_element_no_copy&) noexcept = delete;
+	constexpr buffers_ring_element_no_copy(buffers_ring_element_no_copy&&) noexcept {}
+	constexpr buffers_ring_element_no_copy& operator=(buffers_ring_element_no_copy&&) noexcept {
+		return *this;
+	}
+	~buffers_ring_element_no_copy() noexcept = default;
+};
+
 template <typename Buffer_Type, typename User_Data_T>
-struct buffers_ring_element {
+struct buffers_ring_element : buffers_ring_element_no_copy {
 	Buffer_Type buffer;
 	User_Data_T user_data;
 	void clear() {
@@ -28,7 +39,7 @@ struct buffers_ring_element {
 };
 
 template <typename Buffer_Type>
-struct buffers_ring_element<Buffer_Type, void> {
+struct buffers_ring_element<Buffer_Type, void> : buffers_ring_element_no_copy {
 	Buffer_Type buffer;
 	void clear() {
 		buffer.clear();

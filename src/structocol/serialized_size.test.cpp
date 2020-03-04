@@ -46,9 +46,8 @@ void init_primitive(long double& v) {
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("serialization size of integral types is correctly predicted", "[serialization_size]",
-				   std::uint8_t, std::int8_t, std::uint16_t, std::int16_t, std::uint32_t, std::int32_t,
-				   std::uint64_t, std::int64_t) {
+TEMPLATE_TEST_CASE("serialization size of integral types is correctly predicted", "[serialization_size]", std::uint8_t,
+				   std::int8_t, std::uint16_t, std::int16_t, std::uint32_t, std::int32_t, std::uint64_t, std::int64_t) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_primitive(inval);
@@ -57,9 +56,8 @@ TEMPLATE_TEST_CASE("serialization size of integral types is correctly predicted"
 	REQUIRE(s == vb.available_bytes());
 }
 
-
-TEMPLATE_TEST_CASE("serialization size of floating point types is correctly predicted",
-				   "[serialization_size]", float, double, long double) {
+TEMPLATE_TEST_CASE("serialization size of floating point types is correctly predicted", "[serialization_size]", float,
+				   double, long double) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_primitive(inval);
@@ -92,15 +90,14 @@ T init_aggregate() {
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("serialization size of aggregate types is correctly predicted", "[serialization_size]",
-				   test_a, test_b) {
+TEMPLATE_TEST_CASE("serialization size of aggregate types is correctly predicted", "[serialization_size]", test_a,
+				   test_b) {
 	structocol::vector_buffer vb;
 	auto inval = init_aggregate<TestType>();
 	auto s = structocol::serialized_size(inval);
 	structocol::serialize(vb, inval);
 	REQUIRE(s == vb.available_bytes());
 }
-
 
 namespace {
 template <typename T, typename VT = typename T::value_type,
@@ -150,13 +147,12 @@ void init_vocabulary(T& m) {
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("serialization size of sequence containers is correctly predicted",
-				   "[serialization_size]", std::vector<std::uint8_t>, std::vector<std::int8_t>,
-				   std::vector<std::uint16_t>, std::vector<std::int16_t>, std::vector<std::uint32_t>,
-				   std::vector<std::int32_t>, std::vector<std::uint64_t>, std::vector<std::int64_t>,
-				   std::list<std::uint8_t>, std::list<std::int8_t>, std::list<std::uint16_t>,
-				   std::list<std::int16_t>, std::list<std::uint32_t>, std::list<std::int32_t>,
-				   std::list<std::uint64_t>, std::list<std::int64_t>, std::deque<std::uint8_t>,
+TEMPLATE_TEST_CASE("serialization size of sequence containers is correctly predicted", "[serialization_size]",
+				   std::vector<std::uint8_t>, std::vector<std::int8_t>, std::vector<std::uint16_t>,
+				   std::vector<std::int16_t>, std::vector<std::uint32_t>, std::vector<std::int32_t>,
+				   std::vector<std::uint64_t>, std::vector<std::int64_t>, std::list<std::uint8_t>,
+				   std::list<std::int8_t>, std::list<std::uint16_t>, std::list<std::int16_t>, std::list<std::uint32_t>,
+				   std::list<std::int32_t>, std::list<std::uint64_t>, std::list<std::int64_t>, std::deque<std::uint8_t>,
 				   std::deque<std::int8_t>, std::deque<std::uint16_t>, std::deque<std::int16_t>,
 				   std::deque<std::uint32_t>, std::deque<std::int32_t>, std::deque<std::uint64_t>,
 				   std::deque<std::int64_t>) {
@@ -167,13 +163,12 @@ TEMPLATE_TEST_CASE("serialization size of sequence containers is correctly predi
 	structocol::serialize(vb, inval);
 	REQUIRE(s == vb.available_bytes());
 }
-TEMPLATE_TEST_CASE("serialization size of associative containers is correctly predicted",
-				   "[serialization_size]", std::set<std::uint8_t>, std::set<std::int8_t>, std::set<std::uint16_t>,
-				   std::set<std::int16_t>, std::set<std::uint32_t>, std::set<std::int32_t>,
-				   std::set<std::uint64_t>, std::set<std::int64_t>, std::multiset<std::uint8_t>,
-				   std::multiset<std::int8_t>, std::multiset<std::uint16_t>, std::multiset<std::int16_t>,
-				   std::multiset<std::uint32_t>, std::multiset<std::int32_t>, std::multiset<std::uint64_t>,
-				   std::multiset<std::int64_t>, (std::map<std::uint8_t, std::uint8_t>),
+TEMPLATE_TEST_CASE("serialization size of associative containers is correctly predicted", "[serialization_size]",
+				   std::set<std::uint8_t>, std::set<std::int8_t>, std::set<std::uint16_t>, std::set<std::int16_t>,
+				   std::set<std::uint32_t>, std::set<std::int32_t>, std::set<std::uint64_t>, std::set<std::int64_t>,
+				   std::multiset<std::uint8_t>, std::multiset<std::int8_t>, std::multiset<std::uint16_t>,
+				   std::multiset<std::int16_t>, std::multiset<std::uint32_t>, std::multiset<std::int32_t>,
+				   std::multiset<std::uint64_t>, std::multiset<std::int64_t>, (std::map<std::uint8_t, std::uint8_t>),
 				   (std::map<std::int8_t, std::uint8_t>), (std::map<std::uint8_t, std::int8_t>),
 				   (std::map<std::int8_t, std::int8_t>), (std::map<std::uint16_t, std::uint16_t>),
 				   (std::map<std::int16_t, std::uint16_t>), (std::map<std::uint16_t, std::int16_t>),
@@ -198,7 +193,6 @@ TEMPLATE_TEST_CASE("serialization size of associative containers is correctly pr
 	REQUIRE(s == vb.available_bytes());
 }
 
-
 namespace {
 void init_vocabulary(std::string& s) {
 	s = "Hello World!";
@@ -216,8 +210,8 @@ void init_vocabulary(std::u32string& s) {
 #else
 #define OPTIONAL_U8STR
 #endif
-TEMPLATE_TEST_CASE("serialization size of strings is correctly predicted", "[serialization_size]",
-				   std::string, std::u16string, std::u32string OPTIONAL_U8STR) {
+TEMPLATE_TEST_CASE("serialization size of strings is correctly predicted", "[serialization_size]", std::string,
+				   std::u16string, std::u32string OPTIONAL_U8STR) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_vocabulary(inval);
@@ -245,22 +239,21 @@ T init_sum_type() {
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("serialization size of variants is correctly predicted", "[serialization_size]",
-				   std::monostate, std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t,
-				   std::int16_t, std::uint16_t, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t) {
+TEMPLATE_TEST_CASE("serialization size of variants is correctly predicted", "[serialization_size]", std::monostate,
+				   std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t, std::int16_t, std::uint16_t,
+				   std::int32_t, std::uint32_t, std::int64_t, std::uint64_t) {
 	structocol::vector_buffer vb;
-	using var_t = std::variant<std::monostate, std::string, std::vector<std::uint32_t>, std::int8_t,
-							   std::uint8_t, std::int16_t, std::uint16_t, std::int32_t, std::uint32_t,
-							   std::int64_t, std::uint64_t>;
+	using var_t = std::variant<std::monostate, std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t,
+							   std::int16_t, std::uint16_t, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t>;
 	var_t inval = init_sum_type<TestType>();
 	auto s = structocol::serialized_size(inval);
 	structocol::serialize(vb, inval);
 	REQUIRE(s == vb.available_bytes());
 }
 
-TEMPLATE_TEST_CASE("serialization size of optionals is correctly predicted", "[serialization_size]",
-				   std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t, std::int16_t,
-				   std::uint16_t, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t) {
+TEMPLATE_TEST_CASE("serialization size of optionals is correctly predicted", "[serialization_size]", std::string,
+				   std::vector<std::uint32_t>, std::int8_t, std::uint8_t, std::int16_t, std::uint16_t, std::int32_t,
+				   std::uint32_t, std::int64_t, std::uint64_t) {
 	structocol::vector_buffer vb;
 	SECTION("with value") {
 		std::optional<TestType> inval = init_sum_type<TestType>();
@@ -276,12 +269,10 @@ TEMPLATE_TEST_CASE("serialization size of optionals is correctly predicted", "[s
 	}
 }
 
-TEST_CASE("serialization size of variable length integers is correctly predicted",
-		  "[serialization_size]") {
-	auto inval =
-			GENERATE(as<std::size_t>{}, 1, 5, 0xF, 42, 0xFF, 0xFFF, 0xFFFF, 0xFFFF'F, 0xFFFF'FF, 0xFFFF'FFF,
-					 0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF,
-					 0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF'FFFF);
+TEST_CASE("serialization size of variable length integers is correctly predicted", "[serialization_size]") {
+	auto inval = GENERATE(as<std::size_t>{}, 1, 5, 0xF, 42, 0xFF, 0xFFF, 0xFFFF, 0xFFFF'F, 0xFFFF'FF, 0xFFFF'FFF,
+						  0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF,
+						  0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF'FFFF);
 	structocol::vector_buffer vb;
 	auto s = structocol::varint_serializer::size(inval);
 	structocol::varint_serializer::serialize(vb, inval);
@@ -290,9 +281,8 @@ TEST_CASE("serialization size of variable length integers is correctly predicted
 
 TEST_CASE("serialization size of varint_t applies correctly predicts the correct value.", "[serialization_size]") {
 	auto inval = GENERATE(as<structocol::varint_t>{}, 1, 5, 0xF, 42, 0xFF, 0xFFF, 0xFFFF, 0xFFFF'F, 0xFFFF'FF,
-						  0xFFFF'FFF, 0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF,
-						  0xFFFF'FFFF'FFFF, 0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF,
-						  0xFFFF'FFFF'FFFF'FFFF);
+						  0xFFFF'FFF, 0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF,
+						  0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF'FFFF);
 	structocol::vector_buffer vb;
 	auto s = structocol::serialized_size(inval);
 	structocol::serialize(vb, inval);
