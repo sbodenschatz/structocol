@@ -53,7 +53,17 @@ public:
 
 	template <std::size_t bytes>
 	void write(const std::array<std::byte, bytes>& data) {
-		static_cast<void>(data);
+		auto bytes_written = fwrite(reinterpret_cast<const char*>(data.data()), 1, data.size(), file_handle_);
+		if(bytes_written != bytes) {
+			if(std::ferror(file_handle_)) {
+				throw std::runtime_error("IO error while writing the supplied bytes.");
+				// The caller can still pull the exact error out of errno if they want to, but because std::strerror is
+				// not thread-safe, this function doesn't do that itself because it doesn't know if other threads are
+				// also calling std::strerror and what the locking strategy used by the calling application is.
+			} else {
+				throw std::runtime_error("fwrite() wrote less bytes than requested, but no error indication was set.");
+			}
+		}
 	}
 };
 
