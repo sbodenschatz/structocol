@@ -26,6 +26,7 @@ add_library(structocol_check_build
 		include/structocol/stream_buffer.hpp
 		include/structocol/multiplexing.hpp	
 		include/structocol/buffers_ring.hpp
+		include/structocol/stdio_buffer.hpp
 	)
 add_library(structocol INTERFACE)
 add_library(structocol::structocol ALIAS structocol)
