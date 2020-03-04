@@ -27,7 +27,12 @@ public:
 
 	template <std::size_t bytes>
 	std::optional<std::array<std::byte, bytes>> try_read() {
-		return {};
+		std::array<std::byte, bytes> buf;
+		auto bytes_read = std::fread(reinterpret_cast<char*>(buf.data()), 1, buf.size(), file_handle_);
+		if(bytes_read != bytes) {
+			return std::nullopt;
+		}
+		return buf;
 	}
 
 	template <std::size_t bytes>
