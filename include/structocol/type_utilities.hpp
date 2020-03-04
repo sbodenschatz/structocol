@@ -89,10 +89,10 @@ struct sufficient_int {
 template <std::int64_t val>
 using sufficient_int_t = typename sufficient_int<val>::type;
 
-template <typename,typename = std::void_t<>>
+template <typename, typename = std::void_t<>>
 struct has_clear_member : std::false_type {};
 template <typename T>
-struct has_clear_member<T,std::void_t<decltype(std::declval<T&>().clear())>> : std::true_type {};
+struct has_clear_member<T, std::void_t<decltype(std::declval<T&>().clear())>> : std::true_type {};
 template <class T>
 inline constexpr bool has_clear_member_v = has_clear_member<T>::value;
 

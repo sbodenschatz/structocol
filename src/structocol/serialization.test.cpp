@@ -47,8 +47,8 @@ void init_primitive(long double& v) {
 } // namespace
 
 TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserves value", "[serialization]",
-				   std::uint8_t, std::int8_t, std::uint16_t, std::int16_t, std::uint32_t, std::int32_t,
-				   std::uint64_t, std::int64_t) {
+				   std::uint8_t, std::int8_t, std::uint16_t, std::int16_t, std::uint32_t, std::int32_t, std::uint64_t,
+				   std::int64_t) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_primitive(inval);
@@ -57,8 +57,8 @@ TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserve
 	REQUIRE(inval == outval);
 }
 
-TEMPLATE_TEST_CASE("serialization and deserialization of floating point types preserves value",
-				   "[serialization]", float, double, long double) {
+TEMPLATE_TEST_CASE("serialization and deserialization of floating point types preserves value", "[serialization]",
+				   float, double, long double) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_primitive(inval);
@@ -98,8 +98,8 @@ T init_aggregate() {
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("serialization and deserialization of aggregate types preserves value", "[serialization]",
-				   test_a, test_b) {
+TEMPLATE_TEST_CASE("serialization and deserialization of aggregate types preserves value", "[serialization]", test_a,
+				   test_b) {
 	structocol::vector_buffer vb;
 	auto inval = init_aggregate<TestType>();
 	structocol::serialize(vb, inval);
@@ -155,13 +155,12 @@ void init_vocabulary(T& m) {
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("serialization and deserialization of sequence containers preserves value",
-				   "[serialization]", std::vector<std::uint8_t>, std::vector<std::int8_t>,
-				   std::vector<std::uint16_t>, std::vector<std::int16_t>, std::vector<std::uint32_t>,
-				   std::vector<std::int32_t>, std::vector<std::uint64_t>, std::vector<std::int64_t>,
-				   std::list<std::uint8_t>, std::list<std::int8_t>, std::list<std::uint16_t>,
-				   std::list<std::int16_t>, std::list<std::uint32_t>, std::list<std::int32_t>,
-				   std::list<std::uint64_t>, std::list<std::int64_t>, std::deque<std::uint8_t>,
+TEMPLATE_TEST_CASE("serialization and deserialization of sequence containers preserves value", "[serialization]",
+				   std::vector<std::uint8_t>, std::vector<std::int8_t>, std::vector<std::uint16_t>,
+				   std::vector<std::int16_t>, std::vector<std::uint32_t>, std::vector<std::int32_t>,
+				   std::vector<std::uint64_t>, std::vector<std::int64_t>, std::list<std::uint8_t>,
+				   std::list<std::int8_t>, std::list<std::uint16_t>, std::list<std::int16_t>, std::list<std::uint32_t>,
+				   std::list<std::int32_t>, std::list<std::uint64_t>, std::list<std::int64_t>, std::deque<std::uint8_t>,
 				   std::deque<std::int8_t>, std::deque<std::uint16_t>, std::deque<std::int16_t>,
 				   std::deque<std::uint32_t>, std::deque<std::int32_t>, std::deque<std::uint64_t>,
 				   std::deque<std::int64_t>) {
@@ -172,13 +171,12 @@ TEMPLATE_TEST_CASE("serialization and deserialization of sequence containers pre
 	auto outval = structocol::deserialize<TestType>(vb);
 	REQUIRE(inval == outval);
 }
-TEMPLATE_TEST_CASE("serialization and deserialization of associative containers preserves value",
-				   "[serialization]", std::set<std::uint8_t>, std::set<std::int8_t>, std::set<std::uint16_t>,
-				   std::set<std::int16_t>, std::set<std::uint32_t>, std::set<std::int32_t>,
-				   std::set<std::uint64_t>, std::set<std::int64_t>, std::multiset<std::uint8_t>,
-				   std::multiset<std::int8_t>, std::multiset<std::uint16_t>, std::multiset<std::int16_t>,
-				   std::multiset<std::uint32_t>, std::multiset<std::int32_t>, std::multiset<std::uint64_t>,
-				   std::multiset<std::int64_t>, (std::map<std::uint8_t, std::uint8_t>),
+TEMPLATE_TEST_CASE("serialization and deserialization of associative containers preserves value", "[serialization]",
+				   std::set<std::uint8_t>, std::set<std::int8_t>, std::set<std::uint16_t>, std::set<std::int16_t>,
+				   std::set<std::uint32_t>, std::set<std::int32_t>, std::set<std::uint64_t>, std::set<std::int64_t>,
+				   std::multiset<std::uint8_t>, std::multiset<std::int8_t>, std::multiset<std::uint16_t>,
+				   std::multiset<std::int16_t>, std::multiset<std::uint32_t>, std::multiset<std::int32_t>,
+				   std::multiset<std::uint64_t>, std::multiset<std::int64_t>, (std::map<std::uint8_t, std::uint8_t>),
 				   (std::map<std::int8_t, std::uint8_t>), (std::map<std::uint8_t, std::int8_t>),
 				   (std::map<std::int8_t, std::int8_t>), (std::map<std::uint16_t, std::uint16_t>),
 				   (std::map<std::int16_t, std::uint16_t>), (std::map<std::uint16_t, std::int16_t>),
@@ -220,8 +218,8 @@ void init_vocabulary(std::u32string& s) {
 #else
 #define OPTIONAL_U8STR
 #endif
-TEMPLATE_TEST_CASE("serialization and deserialization of strings preserves value", "[serialization]",
-				   std::string, std::u16string, std::u32string OPTIONAL_U8STR) {
+TEMPLATE_TEST_CASE("serialization and deserialization of strings preserves value", "[serialization]", std::string,
+				   std::u16string, std::u32string OPTIONAL_U8STR) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_vocabulary(inval);
@@ -249,22 +247,21 @@ T init_sum_type() {
 }
 } // namespace
 
-TEMPLATE_TEST_CASE("serialization and deserialization of variants preserves value", "[serialization]",
-				   std::monostate, std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t,
-				   std::int16_t, std::uint16_t, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t) {
+TEMPLATE_TEST_CASE("serialization and deserialization of variants preserves value", "[serialization]", std::monostate,
+				   std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t, std::int16_t, std::uint16_t,
+				   std::int32_t, std::uint32_t, std::int64_t, std::uint64_t) {
 	structocol::vector_buffer vb;
-	using var_t = std::variant<std::monostate, std::string, std::vector<std::uint32_t>, std::int8_t,
-							   std::uint8_t, std::int16_t, std::uint16_t, std::int32_t, std::uint32_t,
-							   std::int64_t, std::uint64_t>;
+	using var_t = std::variant<std::monostate, std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t,
+							   std::int16_t, std::uint16_t, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t>;
 	var_t inval = init_sum_type<TestType>();
 	structocol::serialize(vb, inval);
 	auto outval = structocol::deserialize<var_t>(vb);
 	REQUIRE(inval == outval);
 }
 
-TEMPLATE_TEST_CASE("serialization and deserialization of optionals preserves value", "[serialization]",
-				   std::string, std::vector<std::uint32_t>, std::int8_t, std::uint8_t, std::int16_t,
-				   std::uint16_t, std::int32_t, std::uint32_t, std::int64_t, std::uint64_t) {
+TEMPLATE_TEST_CASE("serialization and deserialization of optionals preserves value", "[serialization]", std::string,
+				   std::vector<std::uint32_t>, std::int8_t, std::uint8_t, std::int16_t, std::uint16_t, std::int32_t,
+				   std::uint32_t, std::int64_t, std::uint64_t) {
 	structocol::vector_buffer vb;
 	SECTION("with value") {
 		std::optional<TestType> inval = init_sum_type<TestType>();
@@ -280,12 +277,10 @@ TEMPLATE_TEST_CASE("serialization and deserialization of optionals preserves val
 	}
 }
 
-TEST_CASE("serialization and deserialization of variable length integers preserves value",
-		  "[serialization]") {
-	auto inval =
-			GENERATE(as<std::size_t>{}, 1, 5, 0xF, 42, 0xFF, 0xFFF, 0xFFFF, 0xFFFF'F, 0xFFFF'FF, 0xFFFF'FFF,
-					 0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF,
-					 0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF'FFFF);
+TEST_CASE("serialization and deserialization of variable length integers preserves value", "[serialization]") {
+	auto inval = GENERATE(as<std::size_t>{}, 1, 5, 0xF, 42, 0xFF, 0xFFF, 0xFFFF, 0xFFFF'F, 0xFFFF'FF, 0xFFFF'FFF,
+						  0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF,
+						  0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF'FFFF);
 	structocol::vector_buffer vb;
 	structocol::varint_serializer::serialize(vb, inval);
 	auto outval = structocol::varint_serializer::deserialize(vb);
@@ -294,9 +289,8 @@ TEST_CASE("serialization and deserialization of variable length integers preserv
 
 TEST_CASE("serialization of varint_t applies correctly and preserves value.", "[serialization]") {
 	auto inval = GENERATE(as<structocol::varint_t>{}, 1, 5, 0xF, 42, 0xFF, 0xFFF, 0xFFFF, 0xFFFF'F, 0xFFFF'FF,
-						  0xFFFF'FFF, 0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF,
-						  0xFFFF'FFFF'FFFF, 0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF,
-						  0xFFFF'FFFF'FFFF'FFFF);
+						  0xFFFF'FFF, 0xFFFF'FFFF, 0xFFFF'FFFF'F, 0xFFFF'FFFF'FF, 0xFFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF,
+						  0xFFFF'FFFF'FFFF'F, 0xFFFF'FFFF'FFFF'FF, 0xFFFF'FFFF'FFFF'FFF, 0xFFFF'FFFF'FFFF'FFFF);
 	structocol::vector_buffer vb;
 	structocol::serialize(vb, inval);
 	auto outval = structocol::deserialize<structocol::varint_t>(vb);
@@ -316,15 +310,14 @@ TEST_CASE("serialization and deserialization of enums (enum class) preserves val
 }
 
 namespace {
-	struct empty_aggregate{};
-}
+struct empty_aggregate {};
+} // namespace
 
-TEST_CASE("Empty aggregates are serialized as a zero-length byte sequence","[serialization]") {
+TEST_CASE("Empty aggregates are serialized as a zero-length byte sequence", "[serialization]") {
 	auto inval = empty_aggregate{};
 	structocol::vector_buffer vb;
 	structocol::serialize(vb, inval);
 	REQUIRE(vb.available_bytes() == 0);
-	[[maybe_unused]]
-	auto outval = structocol::deserialize<empty_aggregate>(vb);
+	[[maybe_unused]] auto outval = structocol::deserialize<empty_aggregate>(vb);
 	REQUIRE(vb.available_bytes() == 0);
 }
