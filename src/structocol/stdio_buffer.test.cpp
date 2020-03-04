@@ -143,3 +143,30 @@ TEST_CASE("Reading from a stdio_buffer on a file at eof fails as expected.", "[s
 		CHECK(!res.has_value());
 	}
 }
+
+TEST_CASE("Errors from stdio are correctly signalled in stdio_buffer.", "[stdio_buffer]") {
+	SECTION("attempting to read() from a write-only opened file") {
+		std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "wb"),
+																		[](std::FILE* f) { std::fclose(f); }};
+		structocol::stdio_buffer iob(file_handle.get());
+		CHECK_THROWS_AS(iob.read<1>(), std::runtime_error);
+	}
+	SECTION("attempting to try_read() from a write-only opened file") {
+		std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "wb"),
+																		[](std::FILE* f) { std::fclose(f); }};
+		structocol::stdio_buffer iob(file_handle.get());
+		auto res = iob.try_read<1>();
+		CHECK(!res.has_value());
+	}
+	SECTION("attempting to write() to a read-only opened file") {
+		{
+			// Touch and truncate file:
+			std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "wb"),
+																			[](std::FILE* f) { std::fclose(f); }};
+		}
+		std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "rb"),
+																		[](std::FILE* f) { std::fclose(f); }};
+		structocol::stdio_buffer iob(file_handle.get());
+		CHECK_THROWS_AS(iob.write(std::array{std::byte{42}}), std::runtime_error);
+	}
+}
