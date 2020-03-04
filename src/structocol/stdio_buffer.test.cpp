@@ -24,6 +24,7 @@ struct checked_rewinder {
 		long cur_pos = std::ftell(fh_);
 		CHECK(cur_pos == start_pos_ + expected_length_);
 		start_pos_ = cur_pos;
+		std::fseek(fh_, 0, SEEK_CUR);
 	}
 };
 } // namespace
@@ -116,5 +117,56 @@ TEST_CASE("stdio_buffer can read back data written to it (interleaved)", "[stdio
 		cr.rewind();
 		REQUIRE(iob.read<1>().front() == std::byte('o'));
 		cr.check();
+	}
+}
+
+TEST_CASE("Reading from a stdio_buffer on a file at eof fails as expected.", "[stdio_buffer]") {
+	std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "w+b"),
+																	[](std::FILE* f) { std::fclose(f); }};
+	structocol::stdio_buffer iob(file_handle.get());
+	SECTION("using read() on an empty file") {
+		CHECK_THROWS_AS(iob.read<1>(), std::runtime_error);
+	}
+	SECTION("using try_read() on an empty file") {
+		auto res = iob.try_read<1>();
+		CHECK(!res.has_value());
+	}
+	SECTION("using read() when the position is at end after writing something") {
+		iob.write(std::array{std::byte('T'), std::byte('e'), std::byte('s'), std::byte('t')});
+		std::fflush(file_handle.get());
+		CHECK_THROWS_AS(iob.read<1>(), std::runtime_error);
+	}
+	SECTION("using try_read() when the position is at end after writing something") {
+		iob.write(std::array{std::byte('T'), std::byte('e'), std::byte('s'), std::byte('t')});
+		std::fflush(file_handle.get());
+		auto res = iob.try_read<1>();
+		CHECK(!res.has_value());
+	}
+}
+
+TEST_CASE("Errors from stdio are correctly signalled in stdio_buffer.", "[stdio_buffer]") {
+	SECTION("attempting to read() from a write-only opened file") {
+		std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "wb"),
+																		[](std::FILE* f) { std::fclose(f); }};
+		structocol::stdio_buffer iob(file_handle.get());
+		CHECK_THROWS_AS(iob.read<1>(), std::runtime_error);
+	}
+	SECTION("attempting to try_read() from a write-only opened file") {
+		std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "wb"),
+																		[](std::FILE* f) { std::fclose(f); }};
+		structocol::stdio_buffer iob(file_handle.get());
+		auto res = iob.try_read<1>();
+		CHECK(!res.has_value());
+	}
+	SECTION("attempting to write() to a read-only opened file") {
+		{
+			// Touch and truncate file:
+			std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "wb"),
+																			[](std::FILE* f) { std::fclose(f); }};
+		}
+		std::unique_ptr<std::FILE, void (*)(std::FILE*)> file_handle = {std::fopen("test_file.temp", "rb"),
+																		[](std::FILE* f) { std::fclose(f); }};
+		structocol::stdio_buffer iob(file_handle.get());
+		CHECK_THROWS_AS(iob.write(std::array{std::byte{42}}), std::runtime_error);
 	}
 }
