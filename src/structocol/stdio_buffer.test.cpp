@@ -24,6 +24,7 @@ struct checked_rewinder {
 		long cur_pos = std::ftell(fh_);
 		CHECK(cur_pos == start_pos_ + expected_length_);
 		start_pos_ = cur_pos;
+		std::fseek(fh_, 0, SEEK_CUR);
 	}
 };
 } // namespace
