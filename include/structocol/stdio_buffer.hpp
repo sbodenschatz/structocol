@@ -19,7 +19,7 @@ class stdio_buffer {
 	std::FILE* file_handle_;
 
 public:
-	stdio_buffer(std::FILE* file_handle) : file_handle_(file_handle) {}
+	explicit stdio_buffer(std::FILE* file_handle) : file_handle_(file_handle) {}
 
 	template <std::size_t bytes>
 	std::array<std::byte, bytes> read() {
