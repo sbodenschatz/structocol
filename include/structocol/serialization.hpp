@@ -177,6 +177,10 @@ struct varint_serializer {
 		while(cont) {
 			unsigned char vbval = std::to_integer<unsigned char>(buffer.template read<1>().front());
 			cont = vbval & 0b1000'0000;
+			if(((val << 7) >> 7) != val) {
+				throw std::overflow_error("Could not deserialize structocol::varint_t value because it is too large "
+										  "for std::size_t on this platform.");
+			}
 			val = (val << 7) | (vbval & 0b0111'1111);
 		}
 		return val;
