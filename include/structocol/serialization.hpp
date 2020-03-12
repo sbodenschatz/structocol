@@ -52,6 +52,9 @@ struct varint_t {
 	}
 };
 
+template <auto... values>
+struct magic_number {};
+
 static_assert(CHAR_BIT == 8, "(De)Serialization is only supported for architectures with 8-bit bytes.");
 
 template <typename Buff, typename T>
@@ -436,6 +439,33 @@ private:
 	}
 };
 
+template <auto... values>
+struct magic_number_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, const magic_number<values...>&) {
+		(structocol::serialize(buffer, values), ...);
+	}
+	template <typename Buff>
+	static magic_number<values...> deserialize(Buff& buffer) {
+		(deserialize_and_check(buffer, values), ...);
+		return {};
+	}
+	constexpr static std::size_t size(const magic_number<values...>&) noexcept {
+		return (structocol::serialized_size(values) + ...);
+	}
+	constexpr static std::size_t size() noexcept {
+		return (structocol::serialized_size<decltype(values)>() + ...);
+	}
+
+private:
+	template <typename Buff, typename Value>
+	static void deserialize_and_check(Buff& buffer, const Value& value) {
+		if(structocol::deserialize<Value>(buffer) != value) {
+			throw std::runtime_error("Magic number field doesn't have the expected value on deserialization.");
+		}
+	}
+};
+
 namespace detail {
 template <typename T, typename Enable = void>
 struct general_serializer {
@@ -624,6 +654,9 @@ struct serializer<std::array<T, N>> : array_serializer<std::array<T, N>> {};
 
 template <std::size_t N>
 struct serializer<std::bitset<N>> : static_bitset_serializer<std::bitset<N>> {};
+
+template <auto... values>
+struct serializer<magic_number<values...>> : magic_number_serializer<values...> {};
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {
