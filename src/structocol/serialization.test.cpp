@@ -297,6 +297,16 @@ TEST_CASE("serialization of varint_t applies correctly and preserves value.", "[
 	REQUIRE(inval == outval);
 }
 
+TEST_CASE("attempting to deserialize a too large varint_t results in an exception", "[serialization]") {
+	structocol::vector_buffer vb;
+	constexpr auto max_valid_bytes = (sizeof(std::size_t) * 8) / 7 + ((((sizeof(std::size_t) * 8) % 7) != 0) ? 1 : 0);
+	for(std::size_t i = 0; i < max_valid_bytes; ++i) {
+		vb.write(std::array{std::byte(0xFFu)});
+	}
+	vb.write(std::array{std::byte(0x7Fu)}); // The additional byte that ensures the error condition.
+	CHECK_THROWS_AS(structocol::deserialize<structocol::varint_t>(vb), std::overflow_error);
+}
+
 namespace {
 enum class test_enum { a, b, c, d };
 } // namespace
