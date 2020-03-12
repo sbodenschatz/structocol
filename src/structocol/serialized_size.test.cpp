@@ -300,3 +300,16 @@ TEST_CASE("serialization size of enums (enum class) is correctly predicted", "[s
 	structocol::serialize(vb, inval);
 	REQUIRE(s == vb.available_bytes());
 }
+
+TEMPLATE_TEST_CASE("serialization size of std::bitset is correctly predicted", "[serialization_size]", std::bitset<0>,
+				   std::bitset<1>, std::bitset<2>, std::bitset<4>, std::bitset<8>, std::bitset<16>, std::bitset<32>,
+				   std::bitset<64>, std::bitset<128>, std::bitset<256>, std::bitset<512>, std::bitset<1024>,
+				   std::bitset<2048>, std::bitset<3>, std::bitset<5>, std::bitset<7>, std::bitset<11>, std::bitset<13>,
+				   std::bitset<17>, std::bitset<19>, std::bitset<23>, std::bitset<29>, std::bitset<31>, std::bitset<37>,
+				   std::bitset<41>) {
+	TestType inval;
+	auto s = structocol::serialized_size(inval);
+	structocol::vector_buffer vb;
+	structocol::serialize(vb, inval);
+	CHECK(vb.available_bytes() == s);
+}
