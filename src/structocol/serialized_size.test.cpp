@@ -313,3 +313,38 @@ TEMPLATE_TEST_CASE("serialization size of std::bitset is calculated correctly", 
 	structocol::serialize(vb, inval);
 	CHECK(vb.available_bytes() == s);
 }
+
+TEST_CASE("serialization size of magic_number is calculated correctly", "[serialization]") {
+	SECTION("for a char sequence") {
+		structocol::magic_number<'H', 'e', 'l', 'l', 'o'> inval;
+		auto s = structocol::serialized_size(inval);
+		structocol::vector_buffer vb;
+		structocol::serialize(vb, inval);
+		CHECK(vb.available_bytes() == s);
+	}
+	SECTION("for a heterogeneously-typed number sequence") {
+		using magic_number_type = structocol::magic_number<std::uint8_t(42), std::uint16_t(1234), std::uint32_t(987654),
+														   std::uint64_t(0xFF00FF00)>;
+		magic_number_type inval;
+		auto s = structocol::serialized_size(inval);
+		structocol::vector_buffer vb;
+		structocol::serialize(vb, inval);
+		CHECK(vb.available_bytes() == s);
+	}
+	SECTION("for a char sequence (type-based size function)") {
+		structocol::magic_number<'H', 'e', 'l', 'l', 'o'> inval;
+		auto s = structocol::serialized_size<structocol::magic_number<'H', 'e', 'l', 'l', 'o'>>();
+		structocol::vector_buffer vb;
+		structocol::serialize(vb, inval);
+		CHECK(vb.available_bytes() == s);
+	}
+	SECTION("for a heterogeneously-typed number sequence (type-based size function)") {
+		using magic_number_type = structocol::magic_number<std::uint8_t(42), std::uint16_t(1234), std::uint32_t(987654),
+														   std::uint64_t(0xFF00FF00)>;
+		magic_number_type inval;
+		auto s = structocol::serialized_size<magic_number_type>();
+		structocol::vector_buffer vb;
+		structocol::serialize(vb, inval);
+		CHECK(vb.available_bytes() == s);
+	}
+}

@@ -379,3 +379,58 @@ TEMPLATE_TEST_CASE("serialization and deserialization of variants preserves valu
 	CHECK(vb.available_bytes() == 0);
 	CHECK(outval == inval);
 }
+
+TEST_CASE("correctly serialized magic_numbers have the expected length and pass the deserialization check",
+		  "[serialization]") {
+	SECTION("for a char sequence") {
+		structocol::magic_number<'H', 'e', 'l', 'l', 'o'> inval;
+		structocol::vector_buffer vb;
+		structocol::serialize(vb, inval);
+		CHECK(vb.available_bytes() == 5);
+		[[maybe_unused]] auto outval = structocol::deserialize<decltype(inval)>(vb);
+	}
+	SECTION("for a heterogeneously-typed number sequence") {
+		using magic_number_type = structocol::magic_number<std::uint8_t(42), std::uint16_t(1234), std::uint32_t(987654),
+														   std::uint64_t(0xFF00FF00)>;
+		magic_number_type inval;
+		structocol::vector_buffer vb;
+		structocol::serialize(vb, inval);
+		CHECK(vb.available_bytes() == 15);
+		[[maybe_unused]] auto outval = structocol::deserialize<decltype(inval)>(vb);
+	}
+}
+
+TEST_CASE("attempting to deserialize a magic_number from invalid data throws the expected exception",
+		  "[serialization]") {
+	SECTION("for a char sequence") {
+		structocol::vector_buffer vb;
+		vb.write(std::array{std::byte{'W'}});
+		vb.write(std::array{std::byte{'o'}});
+		vb.write(std::array{std::byte{'r'}});
+		vb.write(std::array{std::byte{'l'}});
+		vb.write(std::array{std::byte{'d'}});
+		using magic_number_type = structocol::magic_number<'H', 'e', 'l', 'l', 'o'>;
+		CHECK_THROWS_AS(structocol::deserialize<magic_number_type>(vb), std::runtime_error);
+	}
+	SECTION("for a heterogeneously-typed number sequence") {
+		using magic_number_type = structocol::magic_number<std::uint8_t(42), std::uint16_t(1234), std::uint32_t(987654),
+														   std::uint64_t(0xFF00FF00)>;
+		structocol::vector_buffer vb;
+		vb.write(std::array{std::byte{'H'}});
+		vb.write(std::array{std::byte{'e'}});
+		vb.write(std::array{std::byte{'l'}});
+		vb.write(std::array{std::byte{'l'}});
+		vb.write(std::array{std::byte{'o'}});
+		vb.write(std::array{std::byte{' '}});
+		vb.write(std::array{std::byte{'W'}});
+		vb.write(std::array{std::byte{'o'}});
+		vb.write(std::array{std::byte{'r'}});
+		vb.write(std::array{std::byte{'l'}});
+		vb.write(std::array{std::byte{'d'}});
+		vb.write(std::array{std::byte{'!'}});
+		vb.write(std::array{std::byte{'1'}});
+		vb.write(std::array{std::byte{'2'}});
+		vb.write(std::array{std::byte{'3'}});
+		CHECK_THROWS_AS(structocol::deserialize<magic_number_type>(vb), std::runtime_error);
+	}
+}
