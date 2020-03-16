@@ -26,6 +26,7 @@ add_library(structocol_check_build
 		include/structocol/stream_buffer.hpp
 		include/structocol/multiplexing.hpp	
 		include/structocol/buffers_ring.hpp
+		include/structocol/stdio_buffer.hpp
 	)
 add_library(structocol INTERFACE)
 add_library(structocol::structocol ALIAS structocol)
@@ -61,6 +62,7 @@ if(STRUCTOCOL_BUILD_TESTING)
 			src/structocol/serialization.test.cpp
 			src/structocol/serialized_size.test.cpp
 			src/structocol/protocol_handler.test.cpp
+			src/structocol/stdio_buffer.test.cpp
 		)
 	target_link_libraries(structocol_unit_tests PUBLIC
 			structocol_check_build

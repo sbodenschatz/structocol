@@ -114,6 +114,31 @@ clang-debug-build-noasio:
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
 
+clang-asan-ubsan-build:
+  variables:
+    CXX: "clang++"
+    CC: "clang"
+    BUILD_TYPE: "Debug"
+    LDFLAGS: "-fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope"
+    CXXFLAGS: "-fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope"
+    LSAN_OPTIONS: "detect_leaks=0:verbosity=1:log_threads=1:check_initialization_order=1:detect_stack_use_after_return=1"
+  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
+  <<: *linux-build-task
+
+clang-tidy-lint:
+  stage: build
+  <<: *linux-cache-spec
+  script:
+  - cmake -E make_directory build
+  - cd build
+  - cmake -G Ninja "-DCMAKE_CXX_CLANG_TIDY=/usr/bin/clang-tidy" -DCMAKE_BUILD_TYPE=Debug -DBoost_USE_STATIC_LIBS=ON ..
+  - cmake --build . --clean-first
+  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
+  only:
+    variables:
+    - $CI_BUILD_IMAGE_BASE
+  allow_failure: true
+
 msvc-debug-build:
   variables:
     BUILD_TYPE: "Debug"

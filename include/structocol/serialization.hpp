@@ -18,6 +18,7 @@
 #endif
 
 #include <array>
+#include <bitset>
 #include <climits>
 #include <cstddef>
 #include <cstdint>
@@ -50,6 +51,9 @@ struct varint_t {
 		return value;
 	}
 };
+
+template <auto... values>
+struct magic_number {};
 
 static_assert(CHAR_BIT == 8, "(De)Serialization is only supported for architectures with 8-bit bytes.");
 
@@ -176,6 +180,10 @@ struct varint_serializer {
 		while(cont) {
 			unsigned char vbval = std::to_integer<unsigned char>(buffer.template read<1>().front());
 			cont = vbval & 0b1000'0000;
+			if(((val << 7) >> 7) != val) {
+				throw std::overflow_error("Could not deserialize structocol::varint_t value because it is too large "
+										  "for std::size_t on this platform.");
+			}
 			val = (val << 7) | (vbval & 0b0111'1111);
 		}
 		return val;
@@ -191,10 +199,15 @@ private:
 #if defined(__clang__) || defined(__GNUC__)
 		unsigned long long v{val | 1};
 		return CHAR_BIT * sizeof(val) - __builtin_clzll(v);
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && defined(_WIN64)
 		unsigned __int64 v{val | 1};
 		unsigned long index = 0;
 		_BitScanReverse64(&index, v);
+		return index + 1;
+#elif defined(_MSC_VER) && !defined(_WIN64)
+		unsigned long v{val | 1};
+		unsigned long index = 0;
+		_BitScanReverse(&index, v);
 		return index + 1;
 #else
 		int num = 1;
@@ -385,6 +398,74 @@ private:
 	}
 };
 
+template <typename T>
+struct static_bitset_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, const T& val) {
+		constexpr auto bits = bit_size();
+		constexpr auto bytes = size();
+		std::array<std::uint8_t, bytes> byte_arr;
+		for(std::size_t byte = 0; byte < bytes; ++byte) {
+			byte_arr[byte] = 0;
+			for(std::size_t bit = 0; bit < 8 && byte * 8 + bit < bits; ++bit) {
+				byte_arr[byte] |= val.test(byte * 8 + bit) ? (1 << (7 - bit)) : 0;
+			}
+		}
+		structocol::serialize(buffer, byte_arr);
+	}
+	template <typename Buff>
+	static T deserialize(Buff& buffer) {
+		T res;
+		constexpr auto bits = bit_size();
+		constexpr auto bytes = size();
+		auto byte_arr = structocol::deserialize<std::array<std::uint8_t, bytes>>(buffer);
+		for(std::size_t byte = 0; byte < bytes; ++byte) {
+			for(std::size_t bit = 0; bit < 8 && byte * 8 + bit < bits; ++bit) {
+				res.set(byte * 8 + bit, (byte_arr[byte] & (1 << (7 - bit))) != 0);
+			}
+		}
+		return res;
+	}
+	constexpr static std::size_t size(const T&) noexcept {
+		return size();
+	}
+	constexpr static std::size_t size() noexcept {
+		return bit_size() / 8 + ((bit_size() % 8 != 0) ? 1 : 0);
+	}
+
+private:
+	constexpr static std::size_t bit_size() noexcept {
+		return T().size();
+	}
+};
+
+template <auto... values>
+struct magic_number_serializer {
+	template <typename Buff>
+	static void serialize(Buff& buffer, const magic_number<values...>&) {
+		(structocol::serialize(buffer, values), ...);
+	}
+	template <typename Buff>
+	static magic_number<values...> deserialize(Buff& buffer) {
+		(deserialize_and_check(buffer, values), ...);
+		return {};
+	}
+	constexpr static std::size_t size(const magic_number<values...>&) noexcept {
+		return (structocol::serialized_size(values) + ...);
+	}
+	constexpr static std::size_t size() noexcept {
+		return (structocol::serialized_size<decltype(values)>() + ...);
+	}
+
+private:
+	template <typename Buff, typename Value>
+	static void deserialize_and_check(Buff& buffer, const Value& value) {
+		if(structocol::deserialize<Value>(buffer) != value) {
+			throw std::runtime_error("Magic number field doesn't have the expected value on deserialization.");
+		}
+	}
+};
+
 namespace detail {
 template <typename T, typename Enable = void>
 struct general_serializer {
@@ -571,6 +652,12 @@ template <typename T, std::size_t N>
 struct serializer<T[N]> : array_serializer<T[N]> {};
 template <typename T, std::size_t N>
 struct serializer<std::array<T, N>> : array_serializer<std::array<T, N>> {};
+
+template <std::size_t N>
+struct serializer<std::bitset<N>> : static_bitset_serializer<std::bitset<N>> {};
+
+template <auto... values>
+struct serializer<magic_number<values...>> : magic_number_serializer<values...> {};
 
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val) {

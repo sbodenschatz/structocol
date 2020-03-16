@@ -51,8 +51,7 @@ TEST_CASE("protocol handler message stream arrives (using decode_message) as it 
 	}
 	REQUIRE(msg_seq_recv == msg_seq);
 }
-TEST_CASE("protocol handler message stream arrives (using process_message) as it was sent",
-		  "[protocol_handler]") {
+TEST_CASE("protocol handler message stream arrives (using process_message) as it was sent", "[protocol_handler]") {
 	using msg_t = std::variant<hello_msg, lobby_msg, enter_result_msg, score_board_msg>;
 	std::vector<msg_t> msg_seq{hello_msg{"John Doe"}, lobby_msg{{"John Doe", "Jane Smith"}},
 							   enter_result_msg{"John Doe", 9001},
