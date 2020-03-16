@@ -476,6 +476,7 @@ struct serializer<std::int8_t> : single_byte_serializer<std::int8_t> {};
 template <>
 struct serializer<char> : single_byte_serializer<char> {};
 #ifdef __cpp_char8_t
+template <>
 struct serializer<char8_t> : single_byte_serializer<char8_t> {};
 #endif
 template <>
