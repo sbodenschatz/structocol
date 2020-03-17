@@ -64,7 +64,7 @@ template <typename LenghtFieldType, typename ProtocolHandler, typename AsyncRead
 void async_process_multiplexed(AsyncReadStream& stream, Buffer& buffer, Handler&& handler,
 							   ErrorHandler&& error_handler) {
 	auto executor = boost::asio::get_associated_executor(handler, stream.get_executor());
-	async_read_multiplexed(
+	async_read_multiplexed<LenghtFieldType>(
 			stream, buffer,
 			boost::asio::bind_executor(executor, [&buffer, handler = std::forward<Handler>(handler),
 												  error_handler = std::forward<ErrorHandler>(error_handler)](
