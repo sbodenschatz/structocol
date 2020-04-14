@@ -9,6 +9,7 @@
 
 #include "type_utilities.hpp"
 #include <deque>
+#include <stack>
 #include <type_traits>
 
 namespace structocol {
@@ -64,15 +65,15 @@ public:
 		if(recycle_buffers.empty()) {
 			active_buffers.emplace_back();
 		} else {
-			active_buffers.push_back(std::move(recycle_buffers.front()));
-			recycle_buffers.pop_front();
+			active_buffers.push_back(std::move(recycle_buffers.top()));
+			recycle_buffers.pop();
 		}
 		return active_buffers.back();
 	}
 	void recycle_front() {
 		if(!active_buffers.empty()) {
 			active_buffers.front().clear();
-			recycle_buffers.push_back(std::move(active_buffers.front()));
+			recycle_buffers.push(std::move(active_buffers.front()));
 			active_buffers.pop_front();
 		}
 	}
@@ -91,7 +92,7 @@ public:
 
 private:
 	std::deque<element_type> active_buffers;
-	std::deque<element_type> recycle_buffers;
+	std::stack<element_type> recycle_buffers;
 };
 
 } // namespace structocol
