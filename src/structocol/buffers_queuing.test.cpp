@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 #include <memory>
 #include <structocol/buffers_ring.hpp>
+#include <structocol/recycling_buffers_queue.hpp>
 #include <structocol/serialization.hpp>
 #include <structocol/vector_buffer.hpp>
 
@@ -20,7 +21,8 @@ void read_check_recycle(BQ& bq, const T& value) {
 } // namespace
 
 TEMPLATE_TEST_CASE("Queuing of active buffers works correctly in FIFO order.", "[buffers_queuing]",
-				   structocol::buffers_ring<structocol::vector_buffer<>>) {
+				   structocol::buffers_ring<structocol::vector_buffer<>>,
+				   structocol::recycling_buffers_queue<structocol::vector_buffer<>>) {
 	TestType bq;
 	using namespace std::literals;
 	obtain_write(bq, 1234);
@@ -40,7 +42,8 @@ TEMPLATE_TEST_CASE("Queuing of active buffers works correctly in FIFO order.", "
 }
 
 TEMPLATE_TEST_CASE("Queued buffers are correctly recycled and cleared.", "[buffers_queuing]",
-				   structocol::buffers_ring<structocol::vector_buffer<>>) {
+				   structocol::buffers_ring<structocol::vector_buffer<>>,
+				   structocol::recycling_buffers_queue<structocol::vector_buffer<>>) {
 	TestType bq;
 	for(int i = 0; i < 10; ++i) {
 		auto& be = bq.obtain_back();
@@ -77,8 +80,11 @@ struct test_user_data_init {
 };
 } // namespace
 
-TEMPLATE_TEST_CASE("User data is correctly cleaned up upon recycling the entry", "[buffers_queuing]", (structocol::buffers_ring<structocol::vector_buffer<>,test_user_data_init>),
-				   (structocol::buffers_ring<structocol::vector_buffer<>,test_user_data_clear>)) {
+TEMPLATE_TEST_CASE("User data is correctly cleaned up upon recycling the entry", "[buffers_queuing]",
+				   (structocol::buffers_ring<structocol::vector_buffer<>, test_user_data_init>),
+				   (structocol::buffers_ring<structocol::vector_buffer<>, test_user_data_clear>),
+				   (structocol::recycling_buffers_queue<structocol::vector_buffer<>, test_user_data_init>),
+				   (structocol::recycling_buffers_queue<structocol::vector_buffer<>, test_user_data_clear>)) {
 	TestType bq;
 	auto& be = bq.obtain_back();
 	std::weak_ptr ud = (be.user_data.p = std::make_shared<int>(42));
@@ -89,8 +95,9 @@ TEMPLATE_TEST_CASE("User data is correctly cleaned up upon recycling the entry",
 	CHECK(!be2.user_data.p);
 }
 
-TEMPLATE_TEST_CASE("The capacity of a buffers queue is equal to the maximum number of overlapping active buffers.", "[buffers_queuing]",
-				   structocol::buffers_ring<structocol::vector_buffer<>>) {
+TEMPLATE_TEST_CASE("The capacity of a buffers queue is equal to the maximum number of overlapping active buffers.",
+				   "[buffers_queuing]", structocol::buffers_ring<structocol::vector_buffer<>>,
+				   structocol::recycling_buffers_queue<structocol::vector_buffer<>>) {
 	TestType bq;
 	using namespace std::literals;
 	obtain_write(bq, 1234);

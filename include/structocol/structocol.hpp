@@ -10,6 +10,7 @@
 #include "buffers_ring.hpp"
 #include "multiplexing.hpp"
 #include "protocol_handler.hpp"
+#include "recycling_buffers_queue.hpp"
 #include "serialization.hpp"
 #include "stdio_buffer.hpp"
 #include "stream_buffer.hpp"
