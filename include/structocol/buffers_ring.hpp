@@ -9,11 +9,11 @@ namespace structocol {
 
 namespace detail {
 template <typename T>
-static std::enable_if_t<has_clear_member_v<T>> clear_user_data(T& user_data) {
+static std::enable_if_t<has_clear_member_v<T>> clear_buffers_ring_user_data(T& user_data) {
 	user_data.clear();
 }
 template <typename T>
-static std::enable_if_t<!has_clear_member_v<T>> clear_user_data(T& user_data) {
+static std::enable_if_t<!has_clear_member_v<T>> clear_buffers_ring_user_data(T& user_data) {
 	user_data = {};
 }
 
@@ -34,7 +34,7 @@ struct buffers_ring_element : buffers_ring_element_no_copy {
 	User_Data_T user_data;
 	void clear() {
 		buffer.clear();
-		clear_user_data(user_data);
+		clear_buffers_ring_user_data(user_data);
 	}
 };
 
