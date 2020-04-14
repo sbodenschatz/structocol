@@ -38,3 +38,27 @@ TEMPLATE_TEST_CASE("Queuing of active buffers works correctly in FIFO order.", "
 	read_check_recycle(bq, "World"s);
 }
 
+TEMPLATE_TEST_CASE("Queued buffers are correctly recycled and cleared.", "[buffers_queuing]",
+				   structocol::buffers_ring<structocol::vector_buffer<>>) {
+	TestType bq;
+	for(int i = 0; i < 10; ++i) {
+		auto& be = bq.obtain_back();
+		be.buffer.reserve(1024);
+		CHECK(be.buffer.total_capacity() == 1024);
+		be.buffer.write(std::array{std::byte('H'), std::byte('e'), std::byte('l'), std::byte('l'), std::byte('o')});
+		CHECK(be.buffer.available_bytes() == 5);
+	}
+	CHECK(bq.size() == 10);
+	for(int i = 0; i < 10; ++i) {
+		CHECK(bq.front().buffer.total_capacity() == 1024);
+		bq.recycle_front();
+	}
+	CHECK(bq.empty());
+	// All buffers have been consumed.
+	// We should now be able to reuse the recycled buffers.
+	for(int i = 0; i < 10; ++i) {
+		auto& be = bq.obtain_back();
+		CHECK(be.buffer.total_capacity() == 1024);
+		CHECK(be.buffer.available_bytes() == 0);
+	}
+}
