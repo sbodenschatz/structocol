@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <memory>
 #include <structocol/buffers_ring.hpp>
 #include <structocol/serialization.hpp>
 #include <structocol/vector_buffer.hpp>
@@ -61,4 +62,29 @@ TEMPLATE_TEST_CASE("Queued buffers are correctly recycled and cleared.", "[buffe
 		CHECK(be.buffer.total_capacity() == 1024);
 		CHECK(be.buffer.available_bytes() == 0);
 	}
+}
+
+namespace {
+struct test_user_data_clear {
+	std::shared_ptr<int> p;
+	void clear() {
+		p.reset();
+	}
+};
+
+struct test_user_data_init {
+	std::shared_ptr<int> p;
+};
+} // namespace
+
+TEMPLATE_TEST_CASE("User data is correctly cleaned up upon recycling the entry", "[buffers_queuing]", (structocol::buffers_ring<structocol::vector_buffer<>,test_user_data_init>),
+				   (structocol::buffers_ring<structocol::vector_buffer<>,test_user_data_clear>)) {
+	TestType bq;
+	auto& be = bq.obtain_back();
+	std::weak_ptr ud = (be.user_data.p = std::make_shared<int>(42));
+	CHECK(!ud.expired());
+	bq.recycle_front();
+	CHECK(ud.expired());
+	auto& be2 = bq.obtain_back();
+	CHECK(!be2.user_data.p);
 }
