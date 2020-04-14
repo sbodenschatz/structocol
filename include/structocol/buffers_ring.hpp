@@ -82,6 +82,9 @@ public:
 	std::size_t size() const noexcept {
 		return active_buffers.size();
 	}
+	std::size_t capacity() const noexcept {
+		return active_buffers.size() + recycle_buffers.size();
+	}
 
 private:
 	std::deque<element_type> active_buffers;

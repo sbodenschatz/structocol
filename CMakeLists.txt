@@ -63,6 +63,7 @@ if(STRUCTOCOL_BUILD_TESTING)
 			src/structocol/serialized_size.test.cpp
 			src/structocol/protocol_handler.test.cpp
 			src/structocol/stdio_buffer.test.cpp
+			src/structocol/buffers_queuing.test.cpp
 		)
 	target_link_libraries(structocol_unit_tests PUBLIC
 			structocol_check_build
