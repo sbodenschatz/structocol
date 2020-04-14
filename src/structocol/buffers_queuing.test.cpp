@@ -88,3 +88,32 @@ TEMPLATE_TEST_CASE("User data is correctly cleaned up upon recycling the entry",
 	auto& be2 = bq.obtain_back();
 	CHECK(!be2.user_data.p);
 }
+
+TEMPLATE_TEST_CASE("The capacity of a buffers queue is equal to the maximum number of overlapping active buffers.", "[buffers_queuing]",
+				   structocol::buffers_ring<structocol::vector_buffer<>>) {
+	TestType bq;
+	using namespace std::literals;
+	obtain_write(bq, 1234);
+	obtain_write(bq, 2345);
+	obtain_write(bq, 3456);
+	obtain_write(bq, 4567);
+	CHECK(bq.capacity() == 4);
+	read_check_recycle(bq, 1234);
+	read_check_recycle(bq, 2345);
+	read_check_recycle(bq, 3456);
+	CHECK(bq.capacity() == 4);
+	obtain_write(bq, "Test"s);
+	obtain_write(bq, "Hello"s);
+	obtain_write(bq, "World"s);
+	CHECK(bq.capacity() == 4);
+	obtain_write(bq, "xyz"s);
+	obtain_write(bq, "ABCDefgh"s);
+	CHECK(bq.capacity() == 6);
+	read_check_recycle(bq, 4567);
+	read_check_recycle(bq, "Test"s);
+	read_check_recycle(bq, "Hello"s);
+	read_check_recycle(bq, "World"s);
+	read_check_recycle(bq, "xyz"s);
+	read_check_recycle(bq, "ABCDefgh"s);
+	CHECK(bq.capacity() == 6);
+}
