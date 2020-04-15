@@ -7,8 +7,8 @@
 #ifndef STRUCTOCOL_PROTOCOL_HANDLER_INCLUDED
 #define STRUCTOCOL_PROTOCOL_HANDLER_INCLUDED
 
+#include "exceptions.hpp"
 #include <cstdint>
-#include <stdexcept>
 #include <structocol/serialization.hpp>
 #include <structocol/type_utilities.hpp>
 #include <variant>
@@ -54,7 +54,7 @@ public:
 		decode_impl_ptr<Buff> impl_table[] = {make_decode_impl<Buff, Msgs>()...};
 		auto type_index = deserialize<type_index_t>(buffer);
 		if(type_index >= sizeof...(Msgs)) {
-			throw std::invalid_argument("Invalid message type.");
+			throw deserialization_data_error("Invalid message type.");
 		}
 		return impl_table[type_index](buffer);
 	}
@@ -64,7 +64,7 @@ public:
 		process_impl_ptr<Buff, HandlerFunc> impl_table[] = {make_process_impl<Buff, HandlerFunc, Msgs>()...};
 		auto type_index = deserialize<type_index_t>(buffer);
 		if(type_index >= sizeof...(Msgs)) {
-			throw std::invalid_argument("Invalid message type.");
+			throw deserialization_data_error("Invalid message type.");
 		}
 		impl_table[type_index](buffer, std::forward<HandlerFunc>(handler));
 	}
