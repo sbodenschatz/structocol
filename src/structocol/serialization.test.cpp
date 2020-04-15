@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <structocol/exceptions.hpp>
 #include <structocol/serialization.hpp>
 #include <structocol/vector_buffer.hpp>
 #include <tuple>
@@ -304,7 +305,7 @@ TEST_CASE("attempting to deserialize a too large varint_t results in an exceptio
 		vb.write(std::array{std::byte(0xFFu)});
 	}
 	vb.write(std::array{std::byte(0x7Fu)}); // The additional byte that ensures the error condition.
-	CHECK_THROWS_AS(structocol::deserialize<structocol::varint_t>(vb), std::overflow_error);
+	CHECK_THROWS_AS(structocol::deserialize<structocol::varint_t>(vb), structocol::deserialization_data_error);
 }
 
 namespace {
@@ -410,7 +411,7 @@ TEST_CASE("attempting to deserialize a magic_number from invalid data throws the
 		vb.write(std::array{std::byte{'l'}});
 		vb.write(std::array{std::byte{'d'}});
 		using magic_number_type = structocol::magic_number<'H', 'e', 'l', 'l', 'o'>;
-		CHECK_THROWS_AS(structocol::deserialize<magic_number_type>(vb), std::runtime_error);
+		CHECK_THROWS_AS(structocol::deserialize<magic_number_type>(vb), structocol::deserialization_data_error);
 	}
 	SECTION("for a heterogeneously-typed number sequence") {
 		using magic_number_type = structocol::magic_number<std::uint8_t(42), std::uint16_t(1234), std::uint32_t(987654),
@@ -431,6 +432,6 @@ TEST_CASE("attempting to deserialize a magic_number from invalid data throws the
 		vb.write(std::array{std::byte{'1'}});
 		vb.write(std::array{std::byte{'2'}});
 		vb.write(std::array{std::byte{'3'}});
-		CHECK_THROWS_AS(structocol::deserialize<magic_number_type>(vb), std::runtime_error);
+		CHECK_THROWS_AS(structocol::deserialize<magic_number_type>(vb), structocol::deserialization_data_error);
 	}
 }
