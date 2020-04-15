@@ -3,6 +3,7 @@
 
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
 
+#include "exceptions.hpp"
 #include "serialization.hpp"
 
 #ifdef _MSC_VER
@@ -81,7 +82,7 @@ template <typename ProtocolHandler, typename LengthFieldType, typename MessageTy
 void encode_message_multiplexed(Buffer& buffer, const MessageType& msg) {
 	auto len = ProtocolHandler::calculate_message_size(msg);
 	if(len > std::numeric_limits<LengthFieldType>::max()) {
-		throw std::length_error("Message too long for given length type.");
+		throw message_length_overflow("Message too long for given length type.");
 	}
 	structocol::serialize(buffer, static_cast<LengthFieldType>(len));
 	ProtocolHandler::encode_message(buffer, msg);

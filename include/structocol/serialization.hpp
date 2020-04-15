@@ -17,6 +17,7 @@
 #pragma clang diagnostic pop
 #endif
 
+#include "exceptions.hpp"
 #include <array>
 #include <bitset>
 #include <climits>
@@ -30,7 +31,6 @@
 #include <numeric>
 #include <optional>
 #include <set>
-#include <stdexcept>
 #include <string>
 #include <structocol/type_utilities.hpp>
 #include <tuple>
@@ -126,7 +126,7 @@ private:
 		auto min = std::numeric_limits<T>::min();
 		if(val <= static_cast<uint>(min)) return static_cast<T>(val);
 		if(val >= static_cast<uint>(min)) return static_cast<T>(val - static_cast<uint>(min)) + min;
-		throw std::overflow_error("Value not representable in target type.");
+		throw deserialization_data_error("Value not representable in target type.");
 	}
 };
 
@@ -181,8 +181,9 @@ struct varint_serializer {
 			unsigned char vbval = std::to_integer<unsigned char>(buffer.template read<1>().front());
 			cont = vbval & 0b1000'0000;
 			if(((val << 7) >> 7) != val) {
-				throw std::overflow_error("Could not deserialize structocol::varint_t value because it is too large "
-										  "for std::size_t on this platform.");
+				throw deserialization_data_error(
+						"Could not deserialize structocol::varint_t value because it is too large "
+						"for std::size_t on this platform.");
 			}
 			val = (val << 7) | (vbval & 0b0111'1111);
 		}
@@ -461,7 +462,7 @@ private:
 	template <typename Buff, typename Value>
 	static void deserialize_and_check(Buff& buffer, const Value& value) {
 		if(structocol::deserialize<Value>(buffer) != value) {
-			throw std::runtime_error("Magic number field doesn't have the expected value on deserialization.");
+			throw deserialization_data_error("Magic number field doesn't have the expected value on deserialization.");
 		}
 	}
 };

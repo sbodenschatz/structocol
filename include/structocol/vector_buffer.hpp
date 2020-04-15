@@ -15,6 +15,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include "exceptions.hpp"
+
 #ifdef STRUCTOCOL_ENABLE_ASIO_SUPPORT
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -80,7 +82,7 @@ public:
 	template <std::size_t bytes>
 	std::array<std::byte, bytes> read() {
 		std::array<std::byte, bytes> ret;
-		if(bytes > available_bytes()) throw std::length_error("Not enough bytes left in buffer.");
+		if(bytes > available_bytes()) throw buffer_length_error("Not enough bytes left in buffer.");
 		auto start = raw_vector_.begin() + read_offset_;
 		std::copy(start, start + bytes, ret.begin());
 		read_offset_ += bytes;
@@ -203,7 +205,7 @@ public:
 	mutable_buffers_type prepare(std::size_t n) {
 		if(vb_.available_bytes() > max_size_ /*input seq already larger*/ ||
 		   max_size_ - vb_.available_bytes() < n /*too little allowed size left for output seq*/) {
-			throw std::length_error("Requested output sequence too large for max_size.");
+			throw buffer_length_error("Requested output sequence too large for max_size.");
 		}
 		if(vb_.raw_vector_.size() == vb_.size_) vb_.auto_trim_if_policy_requests();
 		vb_.raw_vector_.resize(vb_.size_ + n);

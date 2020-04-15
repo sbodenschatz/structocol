@@ -7,10 +7,10 @@
 #ifndef STRUCTOCOL_STREAM_BUFFER_INCLUDED
 #define STRUCTOCOL_STREAM_BUFFER_INCLUDED
 
+#include "exceptions.hpp"
 #include <array>
 #include <iostream>
 #include <optional>
-#include <stdexcept>
 
 namespace structocol {
 
@@ -24,7 +24,7 @@ public:
 	std::array<std::byte, bytes> read() {
 		std::array<std::byte, bytes> buf;
 		stream_.read(reinterpret_cast<char*>(buf.data()), buf.size());
-		if(!stream_) throw std::runtime_error("Couldn't read the requested amount of bytes.");
+		if(!stream_) throw io_error("Couldn't read the requested amount of bytes.");
 		return buf;
 	}
 
@@ -48,7 +48,7 @@ public:
 	template <std::size_t bytes>
 	void write(const std::array<std::byte, bytes>& data) {
 		stream_.write(reinterpret_cast<const char*>(data.data()), data.size());
-		if(!stream_) throw std::runtime_error("Couldn't write the given amount of bytes.");
+		if(!stream_) throw io_error("Couldn't write the given amount of bytes.");
 	}
 };
 
