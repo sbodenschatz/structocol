@@ -28,6 +28,7 @@ add_library(structocol_check_build
 		include/structocol/buffers_ring.hpp
 		include/structocol/recycling_buffers_queue.hpp
 		include/structocol/stdio_buffer.hpp
+		include/structocol/exceptions.hpp
 	)
 add_library(structocol INTERFACE)
 add_library(structocol::structocol ALIAS structocol)
