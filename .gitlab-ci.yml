@@ -84,6 +84,8 @@ clang-debug-build:
     CC: "clang"
     BUILD_TYPE: "Debug"
     DISABLE_ASIO_SUPPORT: "OFF"
+    CXXFLAGS: "-stdlib=libc++"
+    LDFLAGS: "-stdlib=libc++"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
 
@@ -93,6 +95,8 @@ clang-release-build:
     CC: "clang"
     BUILD_TYPE: "Release"
     DISABLE_ASIO_SUPPORT: "OFF"
+    CXXFLAGS: "-stdlib=libc++"
+    LDFLAGS: "-stdlib=libc++"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_RELEASE}
   <<: *linux-build-task
 
@@ -111,6 +115,8 @@ clang-debug-build-noasio:
     CC: "clang"
     BUILD_TYPE: "Debug"
     DISABLE_ASIO_SUPPORT: "ON"
+    CXXFLAGS: "-stdlib=libc++"
+    LDFLAGS: "-stdlib=libc++"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
 
@@ -119,8 +125,8 @@ clang-asan-ubsan-build:
     CXX: "clang++"
     CC: "clang"
     BUILD_TYPE: "Debug"
-    LDFLAGS: "-fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope"
-    CXXFLAGS: "-fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope"
+    LDFLAGS: "-stdlib=libc++ -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope"
+    CXXFLAGS: "-stdlib=libc++ -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope"
     LSAN_OPTIONS: "detect_leaks=0:verbosity=1:log_threads=1:check_initialization_order=1:detect_stack_use_after_return=1"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
