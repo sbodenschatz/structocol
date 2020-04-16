@@ -87,7 +87,7 @@ TEMPLATE_TEST_CASE("User data is correctly cleaned up upon recycling the entry",
 				   (structocol::recycling_buffers_queue<structocol::vector_buffer<>, test_user_data_clear>)) {
 	TestType bq;
 	auto& be = bq.obtain_back();
-	std::weak_ptr ud = (be.user_data.p = std::make_shared<int>(42));
+	std::weak_ptr<int> ud = (be.user_data.p = std::make_shared<int>(42));
 	CHECK(!ud.expired());
 	bq.recycle_front();
 	CHECK(ud.expired());
