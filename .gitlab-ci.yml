@@ -139,6 +139,13 @@ clang-tidy-lint:
   - cd build
   - cmake -G Ninja "-DCMAKE_CXX_CLANG_TIDY=/usr/bin/clang-tidy" -DCMAKE_BUILD_TYPE=Debug -DBoost_USE_STATIC_LIBS=ON ..
   - cmake --build . --clean-first
+  variables:
+    CXX: "clang++"
+    CC: "clang"
+    BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "OFF"
+    CXXFLAGS: "-stdlib=libc++"
+    LDFLAGS: "-stdlib=libc++"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   only:
     variables:
