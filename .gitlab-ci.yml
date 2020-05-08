@@ -26,18 +26,16 @@ stages:
   - cmake -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=${DISABLE_ASIO_SUPPORT} ..
   - cmake --build .
   - ctest --output-on-failure
-  only:
-    variables:
-    - $CI_BUILD_IMAGE_BASE
+  rules:
+  - if: '$CI_BUILD_IMAGE_BASE'
 
 .mingw-build-template: &mingw-build-task
   stage: build
   <<: *windows-cache-spec    
   tags:
   - win-cpp
-  only:
-    variables:
-    - $WINDOWS_CI
+  rules:
+  - if: '$WINDOWS_CI'
   script:
   - cmake -E make_directory build
   - cd build
@@ -50,9 +48,8 @@ stages:
   <<: *windows-cache-spec    
   tags:
   - win-cpp
-  only:
-    variables:
-    - $WINDOWS_CI
+  rules:
+  - if: '$WINDOWS_CI'
   script:
   - cmake -E make_directory build
   - cd build
@@ -147,9 +144,8 @@ clang-tidy-lint:
     CXXFLAGS: "-stdlib=libc++"
     LDFLAGS: "-stdlib=libc++"
   image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
-  only:
-    variables:
-    - $CI_BUILD_IMAGE_BASE
+  rules:
+  - if: '$CI_BUILD_IMAGE_BASE'
   allow_failure: true
 
 msvc-debug-build:
