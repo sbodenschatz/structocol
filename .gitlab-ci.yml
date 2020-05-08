@@ -4,6 +4,11 @@ variables:
 stages:
 - build
 
+# run pipelines only on branches, not also on merge requests:
+workflow:
+  rules:
+  - if: '$CI_MERGE_REQUEST_ID == null'
+
 .cache-paths-spec: &cache-paths
 - build
 
@@ -26,18 +31,16 @@ stages:
   - cmake -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=${DISABLE_ASIO_SUPPORT} ..
   - cmake --build .
   - ctest --output-on-failure
-  only:
-    variables:
-    - $CI_BUILD_IMAGE_BASE
+  rules:
+  - if: '$BUILD_IMAGE_BASE'
 
 .mingw-build-template: &mingw-build-task
   stage: build
   <<: *windows-cache-spec    
   tags:
   - win-cpp
-  only:
-    variables:
-    - $WINDOWS_CI
+  rules:
+  - if: '$WINDOWS_CI'
   script:
   - cmake -E make_directory build
   - cd build
@@ -50,9 +53,8 @@ stages:
   <<: *windows-cache-spec    
   tags:
   - win-cpp
-  only:
-    variables:
-    - $WINDOWS_CI
+  rules:
+  - if: '$WINDOWS_CI'
   script:
   - cmake -E make_directory build
   - cd build
@@ -66,7 +68,7 @@ gcc-debug-build:
     CC: "gcc"
     BUILD_TYPE: "Debug"
     DISABLE_ASIO_SUPPORT: "OFF"
-  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_GCC_DEBUG}
+  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_GCC_DEBUG}
   <<: *linux-build-task
 
 gcc-release-build:
@@ -75,7 +77,7 @@ gcc-release-build:
     CC: "gcc"
     BUILD_TYPE: "Release"
     DISABLE_ASIO_SUPPORT: "OFF"
-  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_GCC_RELEASE}
+  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_GCC_RELEASE}
   <<: *linux-build-task
 
 clang-debug-build:
@@ -86,7 +88,7 @@ clang-debug-build:
     DISABLE_ASIO_SUPPORT: "OFF"
     CXXFLAGS: "-stdlib=libc++"
     LDFLAGS: "-stdlib=libc++"
-  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
+  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
 
 clang-release-build:
@@ -97,7 +99,7 @@ clang-release-build:
     DISABLE_ASIO_SUPPORT: "OFF"
     CXXFLAGS: "-stdlib=libc++"
     LDFLAGS: "-stdlib=libc++"
-  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_RELEASE}
+  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_CLANG_RELEASE}
   <<: *linux-build-task
 
 gcc-debug-build-noasio:
@@ -106,7 +108,7 @@ gcc-debug-build-noasio:
     CC: "gcc"
     BUILD_TYPE: "Debug"
     DISABLE_ASIO_SUPPORT: "ON"
-  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_GCC_DEBUG}
+  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_GCC_DEBUG}
   <<: *linux-build-task
 
 clang-debug-build-noasio:
@@ -117,7 +119,7 @@ clang-debug-build-noasio:
     DISABLE_ASIO_SUPPORT: "ON"
     CXXFLAGS: "-stdlib=libc++"
     LDFLAGS: "-stdlib=libc++"
-  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
+  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
 
 clang-asan-ubsan-build:
@@ -128,7 +130,7 @@ clang-asan-ubsan-build:
     LDFLAGS: "-stdlib=libc++ -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope"
     CXXFLAGS: "-stdlib=libc++ -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope"
     LSAN_OPTIONS: "detect_leaks=0:verbosity=1:log_threads=1:check_initialization_order=1:detect_stack_use_after_return=1"
-  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
+  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
   <<: *linux-build-task
 
 clang-tidy-lint:
@@ -146,10 +148,9 @@ clang-tidy-lint:
     DISABLE_ASIO_SUPPORT: "OFF"
     CXXFLAGS: "-stdlib=libc++"
     LDFLAGS: "-stdlib=libc++"
-  image: ${CI_BUILD_IMAGE_BASE}${CI_BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
-  only:
-    variables:
-    - $CI_BUILD_IMAGE_BASE
+  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
+  rules:
+  - if: '$BUILD_IMAGE_BASE'
   allow_failure: true
 
 msvc-debug-build:
