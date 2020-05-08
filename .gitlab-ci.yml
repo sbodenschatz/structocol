@@ -4,6 +4,10 @@ variables:
 stages:
 - build
 
+workflow:
+  rules:
+  - if: '$CI_MERGE_REQUEST_ID == null'
+
 .cache-paths-spec: &cache-paths
 - build
 
