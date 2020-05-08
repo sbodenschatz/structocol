@@ -4,6 +4,7 @@ variables:
 stages:
 - build
 
+# run pipelines only on branches, not also on merge requests:
 workflow:
   rules:
   - if: '$CI_MERGE_REQUEST_ID == null'
