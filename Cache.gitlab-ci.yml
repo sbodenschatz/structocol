@@ -11,5 +11,5 @@
 .windows-cache-specs:
   extends: .cache-specs
   cache:
-    key: "%CI_COMMIT_REF_SLUG%-%CI_JOB_NAME%-%CI_RUNNER_ID%"
+    key: "${CI_COMMIT_REF_SLUG}-${CI_JOB_NAME}-${CI_RUNNER_ID}"
 
