@@ -404,26 +404,35 @@ struct static_bitset_serializer {
 	template <typename Buff>
 	static void serialize(Buff& buffer, const T& val) {
 		constexpr auto bits = bit_size();
-		constexpr auto bytes = size();
-		std::array<std::uint8_t, bytes> byte_arr;
-		for(std::size_t byte = 0; byte < bytes; ++byte) {
-			byte_arr[byte] = 0;
-			for(std::size_t bit = 0; bit < 8 && byte * 8 + bit < bits; ++bit) {
-				byte_arr[byte] |= val.test(byte * 8 + bit) ? (1 << (7 - bit)) : 0;
+		if constexpr(bits > 0) {
+			constexpr auto bytes = size();
+			std::array<std::uint8_t, bytes> byte_arr;
+			for(std::size_t byte = 0; byte < bytes; ++byte) {
+				byte_arr[byte] = 0;
+				for(std::size_t bit = 0; bit < 8 && byte * 8 + bit < bits; ++bit) {
+					byte_arr[byte] |= val.test(byte * 8 + bit) ? (1 << (7 - bit)) : 0;
+				}
 			}
+			structocol::serialize(buffer, byte_arr);
+		} else {
+			static_cast<void>(buffer);
+			static_cast<void>(val);
 		}
-		structocol::serialize(buffer, byte_arr);
 	}
 	template <typename Buff>
 	static T deserialize(Buff& buffer) {
 		T res;
 		constexpr auto bits = bit_size();
-		constexpr auto bytes = size();
-		auto byte_arr = structocol::deserialize<std::array<std::uint8_t, bytes>>(buffer);
-		for(std::size_t byte = 0; byte < bytes; ++byte) {
-			for(std::size_t bit = 0; bit < 8 && byte * 8 + bit < bits; ++bit) {
-				res.set(byte * 8 + bit, (byte_arr[byte] & (1 << (7 - bit))) != 0);
+		if constexpr(bits > 0) {
+			constexpr auto bytes = size();
+			auto byte_arr = structocol::deserialize<std::array<std::uint8_t, bytes>>(buffer);
+			for(std::size_t byte = 0; byte < bytes; ++byte) {
+				for(std::size_t bit = 0; bit < 8 && byte * 8 + bit < bits; ++bit) {
+					res.set(byte * 8 + bit, (byte_arr[byte] & (1 << (7 - bit))) != 0);
+				}
 			}
+		} else {
+			static_cast<void>(buffer);
 		}
 		return res;
 	}
