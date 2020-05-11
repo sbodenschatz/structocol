@@ -9,22 +9,24 @@ workflow:
   rules:
   - if: '$CI_MERGE_REQUEST_ID == null'
 
-.cache-paths-spec: &cache-paths
-- build
+.cache-specs:
+  cache:
+    paths:
+    - build
 
-.linux-cache-spec-template: &linux-cache-spec
+.linux-cache-specs:
+  extends: .cache-specs
   cache:
     key: ${CI_COMMIT_REF_SLUG}-${CI_JOB_NAME}
-    paths: *cache-paths
 
-.windows-cache-spec-template: &windows-cache-spec
+.windows-cache-specs:
+  extends: .cache-specs
   cache:
-    paths: *cache-paths
     key: "%CI_COMMIT_REF_SLUG%-%CI_JOB_NAME%-%CI_RUNNER_ID%"
 
-.linux-build-template: &linux-build-task
+.linux-build-job:
   stage: build
-  <<: *linux-cache-spec
+  extends: .linux-cache-specs
   script:
   - cmake -E make_directory build
   - cd build
@@ -34,9 +36,9 @@ workflow:
   rules:
   - if: '$BUILD_IMAGE_BASE'
 
-.mingw-build-template: &mingw-build-task
+.mingw-build-job:
   stage: build
-  <<: *windows-cache-spec    
+  extends: .windows-cache-specs
   tags:
   - win-cpp
   rules:
@@ -48,9 +50,9 @@ workflow:
   - cmake --build .
   - ctest --output-on-failure
 
-.msbuild-build-template: &msbuild-build-task
+.msbuild-build-job:
   stage: build
-  <<: *windows-cache-spec    
+  extends: .windows-cache-specs
   tags:
   - win-cpp
   rules:
@@ -63,24 +65,34 @@ workflow:
   - ctest -C %BUILD_TYPE% --output-on-failure
 
 gcc-debug-build:
+  extends: .linux-build-job
   variables:
     CXX: "g++"
     CC: "gcc"
     BUILD_TYPE: "Debug"
     DISABLE_ASIO_SUPPORT: "OFF"
   image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_GCC_DEBUG}
-  <<: *linux-build-task
 
 gcc-release-build:
+  extends: .linux-build-job
   variables:
     CXX: "g++"
     CC: "gcc"
     BUILD_TYPE: "Release"
     DISABLE_ASIO_SUPPORT: "OFF"
   image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_GCC_RELEASE}
-  <<: *linux-build-task
+
+gcc-debug-build-noasio:
+  extends: .linux-build-job
+  variables:
+    CXX: "g++"
+    CC: "gcc"
+    BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "ON"
+  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_GCC_DEBUG}
 
 clang-debug-build:
+  extends: .linux-build-job
   variables:
     CXX: "clang++"
     CC: "clang"
@@ -89,9 +101,9 @@ clang-debug-build:
     CXXFLAGS: "-stdlib=libc++"
     LDFLAGS: "-stdlib=libc++"
   image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
-  <<: *linux-build-task
 
 clang-release-build:
+  extends: .linux-build-job
   variables:
     CXX: "clang++"
     CC: "clang"
@@ -100,18 +112,9 @@ clang-release-build:
     CXXFLAGS: "-stdlib=libc++"
     LDFLAGS: "-stdlib=libc++"
   image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_CLANG_RELEASE}
-  <<: *linux-build-task
-
-gcc-debug-build-noasio:
-  variables:
-    CXX: "g++"
-    CC: "gcc"
-    BUILD_TYPE: "Debug"
-    DISABLE_ASIO_SUPPORT: "ON"
-  image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_GCC_DEBUG}
-  <<: *linux-build-task
 
 clang-debug-build-noasio:
+  extends: .linux-build-job
   variables:
     CXX: "clang++"
     CC: "clang"
@@ -120,9 +123,9 @@ clang-debug-build-noasio:
     CXXFLAGS: "-stdlib=libc++"
     LDFLAGS: "-stdlib=libc++"
   image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
-  <<: *linux-build-task
 
 clang-asan-ubsan-build:
+  extends: .linux-build-job
   variables:
     CXX: "clang++"
     CC: "clang"
@@ -131,11 +134,10 @@ clang-asan-ubsan-build:
     CXXFLAGS: "-stdlib=libc++ -fno-omit-frame-pointer -fsanitize=address -fsanitize=undefined -fsanitize-address-use-after-scope"
     LSAN_OPTIONS: "detect_leaks=0:verbosity=1:log_threads=1:check_initialization_order=1:detect_stack_use_after_return=1"
   image: ${BUILD_IMAGE_BASE}${BUILD_IMAGE_SUFFIX_CLANG_DEBUG}
-  <<: *linux-build-task
 
 clang-tidy-lint:
   stage: build
-  <<: *linux-cache-spec
+  extends: .linux-cache-specs
   script:
   - cmake -E make_directory build
   - cd build
@@ -157,34 +159,34 @@ msvc-debug-build:
   variables:
     BUILD_TYPE: "Debug"
     DISABLE_ASIO_SUPPORT: "OFF"
-  <<: *msbuild-build-task
+  extends: .msbuild-build-job
 
 msvc-release-build:
   variables:
     BUILD_TYPE: "Release"
     DISABLE_ASIO_SUPPORT: "OFF"
-  <<: *msbuild-build-task
-
-mingw-debug-build:
-  variables:
-    BUILD_TYPE: "Debug"
-    DISABLE_ASIO_SUPPORT: "OFF"
-  <<: *mingw-build-task
-
-mingw-release-build:
-  variables:
-    BUILD_TYPE: "Release"
-    DISABLE_ASIO_SUPPORT: "OFF"
-  <<: *mingw-build-task
+  extends: .msbuild-build-job
 
 msvc-debug-build-noasio:
   variables:
     BUILD_TYPE: "Debug"
     DISABLE_ASIO_SUPPORT: "ON"
-  <<: *msbuild-build-task
+  extends: .msbuild-build-job
+
+mingw-debug-build:
+  variables:
+    BUILD_TYPE: "Debug"
+    DISABLE_ASIO_SUPPORT: "OFF"
+  extends: .mingw-build-job
+
+mingw-release-build:
+  variables:
+    BUILD_TYPE: "Release"
+    DISABLE_ASIO_SUPPORT: "OFF"
+  extends: .mingw-build-job
 
 mingw-debug-build-noasio:
   variables:
     BUILD_TYPE: "Debug"
     DISABLE_ASIO_SUPPORT: "ON"
-  <<: *mingw-build-task
+  extends: .mingw-build-job
