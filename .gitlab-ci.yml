@@ -9,60 +9,7 @@ workflow:
   rules:
   - if: '$CI_MERGE_REQUEST_ID == null'
 
-.cache-specs:
-  cache:
-    paths:
-    - build
-
-.linux-cache-specs:
-  extends: .cache-specs
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}-${CI_JOB_NAME}
-
-.windows-cache-specs:
-  extends: .cache-specs
-  cache:
-    key: "%CI_COMMIT_REF_SLUG%-%CI_JOB_NAME%-%CI_RUNNER_ID%"
-
-.linux-build-job:
-  stage: build
-  extends: .linux-cache-specs
-  script:
-  - cmake -E make_directory build
-  - cd build
-  - cmake -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=${DISABLE_ASIO_SUPPORT} ..
-  - cmake --build .
-  - ctest --output-on-failure
-  rules:
-  - if: '$BUILD_IMAGE_BASE'
-
-.mingw-build-job:
-  stage: build
-  extends: .windows-cache-specs
-  tags:
-  - win-cpp
-  rules:
-  - if: '$WINDOWS_CI'
-  script:
-  - cmake -E make_directory build
-  - cd build
-  - cmake -G Ninja -DCMAKE_BUILD_TYPE=%BUILD_TYPE% -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=%DISABLE_ASIO_SUPPORT% ..
-  - cmake --build .
-  - ctest --output-on-failure
-
-.msbuild-build-job:
-  stage: build
-  extends: .windows-cache-specs
-  tags:
-  - win-cpp
-  rules:
-  - if: '$WINDOWS_CI'
-  script:
-  - cmake -E make_directory build
-  - cd build
-  - cmake -G "Visual Studio 16 2019" -A x64 -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=%DISABLE_ASIO_SUPPORT% ..
-  - cmake --build . --config %BUILD_TYPE% 
-  - ctest -C %BUILD_TYPE% --output-on-failure
+include: '/Templates.gitlab-ci.yml'
 
 gcc-debug-build:
   extends: .linux-build-job
