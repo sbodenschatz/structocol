@@ -40,7 +40,7 @@ target_compile_features(structocol INTERFACE cxx_std_17)
 target_link_libraries(structocol INTERFACE boost::pfr)
 target_compile_options(structocol_check_build PUBLIC
 		$<$<CXX_COMPILER_ID:MSVC>:/MP /W4 /WX /bigobj>
-		$<$<CXX_COMPILER_ID:GNU>: -Wall -Wextra -Werror>
+		$<$<CXX_COMPILER_ID:GNU>: -Wall -Wextra -Werror $<$<PLATFORM_ID:Windows>:-Wa,-mbig-obj>>
 		$<$<CXX_COMPILER_ID:Clang>: -Wall -Wextra -Werror>
 	)
 target_link_libraries(structocol_check_build PUBLIC structocol)
