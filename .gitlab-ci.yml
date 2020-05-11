@@ -58,7 +58,7 @@ workflow:
   script:
   - cmake -E make_directory build
   - cd build
-  - cmake -G "Visual Studio 15 2017" -A x64 -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=%DISABLE_ASIO_SUPPORT% ..
+  - cmake -G "Visual Studio 16 2019" -A x64 -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=%DISABLE_ASIO_SUPPORT% ..
   - cmake --build . --config %BUILD_TYPE% 
   - ctest -C %BUILD_TYPE% --output-on-failure
 
