@@ -4,12 +4,10 @@ variables:
 stages:
 - build
 
-# run pipelines only on branches, not also on merge requests:
-workflow:
-  rules:
-  - if: '$CI_MERGE_REQUEST_ID == null'
-
-include: '/Templates.gitlab-ci.yml'
+include:
+- template: 'Workflows/Branch-Pipelines.gitlab-ci.yml'
+- local: '/Cache.gitlab-ci.yml'
+- local: '/Templates.gitlab-ci.yml'
 
 gcc-debug-build:
   extends: .linux-build-job

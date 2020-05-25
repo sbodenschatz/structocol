@@ -1,5 +1,3 @@
-include: '/Cache.gitlab-ci.yml'
-
 .linux-build-job:
   stage: build
   extends: .linux-cache-specs
@@ -39,4 +37,3 @@ include: '/Cache.gitlab-ci.yml'
   - cmake -G "Visual Studio 16 2019" -A x64 -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=$env:DISABLE_ASIO_SUPPORT ..
   - cmake --build . --config $env:BUILD_TYPE
   - ctest -C $env:BUILD_TYPE --output-on-failure
-
