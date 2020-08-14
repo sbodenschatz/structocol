@@ -488,7 +488,7 @@ template <typename T>
 struct general_serializer<T, std::enable_if_t<std::is_aggregate_v<T>>> {
 	template <typename Buff>
 	static void serialize(Buff& buffer, const T& val) {
-		if constexpr(boost::pfr::tuple_size_v<T>> 0) {
+		if constexpr(boost::pfr::tuple_size_v<T> > 0) {
 			boost::pfr::for_each_field(val, [&buffer](const auto& field) { structocol::serialize(buffer, field); });
 		} else {
 			static_cast<void>(buffer);
@@ -603,6 +603,38 @@ struct serializer<double> : floating_point_serializer<double> {};
 template <>
 struct serializer<long double> : floating_point_serializer<long double> {};
 
+#ifdef __cpp_concepts
+
+// Bootstrap required concepts as equivalents to their counterparts from <concepts> to avoid having to rely on
+// <concepts> header, as that is not yet available widely enough:
+namespace detail {
+template <class T>
+concept unsigned_integral = std::is_integral_v<T> && !std::is_signed_v<T>;
+
+template <class From, class To>
+concept convertible_to = std::is_convertible_v<From, To>&& requires(std::add_rvalue_reference_t<From> (&f)()) {
+	static_cast<To>(f());
+};
+} // namespace detail
+
+template <typename C>
+concept dynamic_container = requires(C c, typename C::value_type item, typename C::iterator it,
+									 typename C::const_iterator c_it) {
+	c_it = c.begin();
+	c_it = c.end();
+	it = c.end();
+	++c_it;
+	{ *c_it }
+	->detail::convertible_to<const typename C::value_type&>;
+	{ c.size() }
+	->detail::unsigned_integral;
+	c.insert(c.end(), item);
+};
+template <dynamic_container DC>
+struct serializer<DC> : dynamic_container_serializer<DC> {};
+
+#else
+
 template <typename T>
 struct serializer<std::vector<T>> : dynamic_container_serializer<std::vector<T>> {};
 template <typename T>
@@ -617,6 +649,8 @@ template <typename K, typename V>
 struct serializer<std::multimap<K, V>> : dynamic_container_serializer<std::multimap<K, V>> {};
 template <typename T>
 struct serializer<std::multiset<T>> : dynamic_container_serializer<std::multiset<T>> {};
+
+#endif
 
 template <typename T>
 struct serializer<std::basic_string<T>> : dynamic_container_serializer<std::basic_string<T>> {};
