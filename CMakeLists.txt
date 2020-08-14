@@ -71,5 +71,9 @@ if(STRUCTOCOL_BUILD_TESTING)
 			structocol_check_build
 			Catch2::Catch2
 		)
+	option(STRUCTOCOL_TEST_CPP20_SUPPORT "Run unit tests in C++20 mode." ON)
+	if(STRUCTOCOL_TEST_CPP20_SUPPORT)
+		target_compile_features(structocol INTERFACE cxx_std_20)
+	endif()
 	catch_discover_tests(structocol_unit_tests)
 endif()

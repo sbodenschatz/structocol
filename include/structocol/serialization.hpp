@@ -488,7 +488,7 @@ template <typename T>
 struct general_serializer<T, std::enable_if_t<std::is_aggregate_v<T>>> {
 	template <typename Buff>
 	static void serialize(Buff& buffer, const T& val) {
-		if constexpr(boost::pfr::tuple_size_v<T>> 0) {
+		if constexpr(boost::pfr::tuple_size_v<T> > 0) {
 			boost::pfr::for_each_field(val, [&buffer](const auto& field) { structocol::serialize(buffer, field); });
 		} else {
 			static_cast<void>(buffer);
