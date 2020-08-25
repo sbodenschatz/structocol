@@ -63,9 +63,11 @@ static_assert(CHAR_BIT == 8, "(De)Serialization is only supported for architectu
 // bump its format version when the assert breaks
 // or
 // - Determine its corresponding version signature using constexpr code based on this constant
-constexpr std::uint32_t format_version_signature = 2019'03'30u;
+constexpr std::uint32_t format_version_signature = 2020'08'25u;
 // Format version history:
 // - 2019'03'30: Initial binary format
+// - 2020'08'25: Fixed endianess of floating point values to big endian (breaks format on little endian architectures,
+//               big endian was chosen for consistency with integer network byte order).
 
 // Can be used to easily put a version tag into some header and error-out if it doesn't match on deserialize.
 using format_version_magic_number_t =
@@ -155,15 +157,37 @@ struct floating_point_serializer {
 													 "architectures with IEC 559/IEEE 754 floating point types.");
 	template <typename Buff>
 	static void serialize(Buff& buffer, T val) {
-		std::array<std::byte, sizeof(T)> data;
-		std::memcpy(data.data(), &val, sizeof(T));
+		std::array<std::byte, sizeof(T)> data{};
+		if constexpr(std::endian::native == std::endian::big) {
+			std::memcpy(data.data(), &val, sizeof(T));
+		} else if constexpr(std::endian::native == std::endian::little) {
+			const std::byte* val_bytes = reinterpret_cast<const std::byte*>(&val);
+			for(std::size_t i = 0; i < sizeof(T); ++i) {
+				data[i] = val_bytes[sizeof(T) - i - 1];
+			}
+		} else {
+			static_assert(
+					dependent_false<T>,
+					"Floating point value serialization is currently not supported on mixed-endian architectures.");
+		}
 		buffer.write(data);
 	}
 	template <typename Buff>
 	static T deserialize(Buff& buffer) {
 		auto data = buffer.template read<sizeof(T)>();
-		T val;
-		std::memcpy(&val, data.data(), sizeof(T));
+		T val{};
+		if constexpr(std::endian::native == std::endian::big) {
+			std::memcpy(&val, data.data(), sizeof(T));
+		} else if constexpr(std::endian::native == std::endian::little) {
+			std::byte* val_bytes = reinterpret_cast<std::byte*>(&val);
+			for(std::size_t i = 0; i < sizeof(T); ++i) {
+				val_bytes[i] = data[sizeof(T) - i - 1];
+			}
+		} else {
+			static_assert(
+					dependent_false<T>,
+					"Floating point value deserialization is currently not supported on mixed-endian architectures.");
+		}
 		return val;
 	}
 	static constexpr std::size_t size() {
