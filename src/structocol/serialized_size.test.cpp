@@ -41,9 +41,6 @@ void init_primitive(float& v) {
 void init_primitive(double& v) {
 	v = 23456.67891;
 }
-void init_primitive(long double& v) {
-	v = 345678.912345;
-}
 } // namespace
 
 TEMPLATE_TEST_CASE("serialization size of integral types is calculated correctly", "[serialization_size]", std::uint8_t,
@@ -57,7 +54,7 @@ TEMPLATE_TEST_CASE("serialization size of integral types is calculated correctly
 }
 
 TEMPLATE_TEST_CASE("serialization size of floating point types is calculated correctly", "[serialization_size]", float,
-				   double, long double) {
+				   double) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_primitive(inval);

@@ -42,9 +42,6 @@ void init_primitive(float& v) {
 void init_primitive(double& v) {
 	v = 23456.67891;
 }
-void init_primitive(long double& v) {
-	v = 345678.912345;
-}
 } // namespace
 
 TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserves value", "[serialization]",
@@ -59,7 +56,7 @@ TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserve
 }
 
 TEMPLATE_TEST_CASE("serialization and deserialization of floating point types preserves value", "[serialization]",
-				   float, double, long double) {
+				   float, double) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_primitive(inval);
