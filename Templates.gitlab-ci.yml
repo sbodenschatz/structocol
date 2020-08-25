@@ -4,7 +4,7 @@
   script:
   - cmake -E make_directory build
   - cd build
-  - cmake -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=${DISABLE_ASIO_SUPPORT} -DSTRUCTOCOL_TEST_CPP20_SUPPORT=${TEST_CPP20_SUPPORT} ..
+  - cmake -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=${DISABLE_ASIO_SUPPORT} ..
   - cmake --build .
   - ctest --output-on-failure
   rules:
@@ -20,7 +20,7 @@
   script:
   - cmake -E make_directory build
   - cd build
-  - cmake -G Ninja -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=$env:DISABLE_ASIO_SUPPORT -DSTRUCTOCOL_TEST_CPP20_SUPPORT=$env:TEST_CPP20_SUPPORT ..
+  - cmake -G Ninja -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=$env:DISABLE_ASIO_SUPPORT ..
   - cmake --build .
   - ctest --output-on-failure
 
@@ -34,6 +34,6 @@
   script:
   - cmake -E make_directory build
   - cd build
-  - cmake -G "Visual Studio 16 2019" -A x64 -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=$env:DISABLE_ASIO_SUPPORT -DSTRUCTOCOL_TEST_CPP20_SUPPORT=$env:TEST_CPP20_SUPPORT ..
+  - cmake -G "Visual Studio 16 2019" -A x64 -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT=$env:DISABLE_ASIO_SUPPORT ..
   - cmake --build . --config $env:BUILD_TYPE
   - ctest -C $env:BUILD_TYPE --output-on-failure

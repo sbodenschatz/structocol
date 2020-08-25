@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <catch2/catch.hpp>
+#include <cfloat>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -36,12 +38,80 @@ void init_primitive(std::uint64_t& v) {
 void init_primitive(std::int64_t& v) {
 	v = -0x7CDEF123456789AB;
 }
-void init_primitive(float& v) {
-	v = 123.456f;
+template <int mantissa_len, int exponent_len, int exponent_bias, typename T,
+		  std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
+constexpr std::array<std::byte, sizeof(T)> fp_big_endian_bytes(T v) {
+	// This function generates the expected big endian bytes for a given floating point value without using
+	// reinterpret_cast, memcpy or similar mechanisms that depend on the native endianess. Instead, the bits are
+	// calculated purely using floating point arithmetic and toggling the corresponding bits in software.
+	// This is done to validate the architecture-dependent endianess code against an architecture-independently
+	// generated expected value. It is expressly not designed for actual usage outside the test code.
+	static_assert(exponent_len + mantissa_len + 1 == sizeof(T) * CHAR_BIT);
+	static_assert(FLT_RADIX == 2);
+	int exponent = std::ilogb(v);
+	T significand = std::scalbn(v, -exponent);
+	unsigned char sign = (significand <= T(-0.0)) ? 1 : 0;
+	exponent += exponent_bias;
+	T mantissa = std::fabs(significand) - 1;
+	std::uint_least64_t mantissa_bits = 0;
+	for(int i = 0; i < mantissa_len; ++i) {
+		mantissa_bits <<= 1;
+		if(mantissa >= T(0.5)) {
+			mantissa -= T(0.5);
+			mantissa_bits |= 1;
+		}
+		mantissa *= 2;
+	}
+	// We calculated the components (sign, exponent, mantissa_bits), now encode them in big endian IEEE format.
+	std::array<std::byte, sizeof(T)> res{};
+	int byte_index = 0;
+	int bit_index = 7;
+	res[byte_index] = std::byte(sign << bit_index);
+	bit_index--;
+	int exp_bits_left = exponent_len;
+	while(exp_bits_left) {
+		int num_bits_now = std::min(exp_bits_left, bit_index + 1);
+		res[byte_index] |= std::byte(((exponent >> (exp_bits_left - num_bits_now)) & ((1 << num_bits_now) - 1))
+									 << (bit_index - num_bits_now + 1));
+		exp_bits_left -= num_bits_now;
+		bit_index -= num_bits_now;
+		if(bit_index < 0) {
+			bit_index = 7;
+			byte_index++;
+		}
+	}
+	int bits_left = mantissa_len;
+	if(bit_index < 7) {
+		int num_bits_now = std::min(bits_left, bit_index + 1);
+		res[byte_index] |= std::byte(((mantissa_bits >> (bits_left - num_bits_now)) & ((1 << num_bits_now) - 1))
+									 << (bit_index - num_bits_now + 1));
+		bits_left -= num_bits_now;
+		bit_index -= num_bits_now;
+		if(bit_index < 0) {
+			bit_index = 7;
+			byte_index++;
+		}
+	}
+	while(bits_left) {
+		int num_bits_now = 8;
+		res[byte_index] |= std::byte((mantissa_bits >> (bits_left - num_bits_now)) & 0xFF);
+		bits_left -= num_bits_now;
+		byte_index++;
+	}
+
+	return res;
 }
-void init_primitive(double& v) {
-	v = 23456.67891;
+void init_primitive(float& v, std::array<std::byte, sizeof(float)>& expected, std::size_t index) {
+	constexpr float values[] = {123.456f, 0.00001f, -123.456f, 12300000.0001f, 1e20f, -420000000.0000234f};
+	v = values[index];
+	expected = fp_big_endian_bytes<23, 8, 127>(values[index]);
 }
+void init_primitive(double& v, std::array<std::byte, sizeof(double)>& expected, std::size_t index) {
+	constexpr double values[] = {23456.67891, -456.6789123, 0.0000000000001, 1e200, -42e42, -12345678900000.321};
+	v = values[index];
+	expected = fp_big_endian_bytes<52, 11, 1023>(values[index]);
+}
+
 } // namespace
 
 TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserves value", "[serialization]",
@@ -55,14 +125,37 @@ TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserve
 	REQUIRE(inval == outval);
 }
 
-TEMPLATE_TEST_CASE("serialization and deserialization of floating point types preserves value", "[serialization]",
-				   float, double) {
+TEMPLATE_TEST_CASE("serialization and deserialization of floating point types preserves value and produces the "
+				   "expected bytes (big endian encoding)",
+				   "[serialization]", float, double) {
 	structocol::vector_buffer vb;
 	TestType inval;
-	init_primitive(inval);
+	std::array<std::byte, sizeof(TestType)> expected_data{};
+	SECTION("Test value 0") {
+		init_primitive(inval, expected_data, 0);
+	}
+	SECTION("Test value 1") {
+		init_primitive(inval, expected_data, 1);
+	}
+	SECTION("Test value 2") {
+		init_primitive(inval, expected_data, 2);
+	}
+	SECTION("Test value 3") {
+		init_primitive(inval, expected_data, 3);
+	}
+	SECTION("Test value 4") {
+		init_primitive(inval, expected_data, 4);
+	}
+	SECTION("Test value 5") {
+		init_primitive(inval, expected_data, 5);
+	}
 	structocol::serialize(vb, inval);
+	CHECK(std::equal(vb.raw_vector().begin(), vb.raw_vector().end(), expected_data.begin(), expected_data.end(),
+					 [](const std::byte& a, const std::byte& b) {
+						 return static_cast<unsigned char>(a) == static_cast<unsigned char>(b);
+					 }));
 	auto outval = structocol::deserialize<TestType>(vb);
-	REQUIRE(inval == Approx(outval).epsilon(0.0001));
+	CHECK(inval == Approx(outval));
 }
 
 namespace {

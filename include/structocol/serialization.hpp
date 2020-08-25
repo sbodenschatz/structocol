@@ -18,7 +18,9 @@
 #endif
 
 #include "exceptions.hpp"
+#include <algorithm>
 #include <array>
+#include <bit>
 #include <bitset>
 #include <climits>
 #include <cstddef>
@@ -62,9 +64,11 @@ static_assert(CHAR_BIT == 8, "(De)Serialization is only supported for architectu
 // bump its format version when the assert breaks
 // or
 // - Determine its corresponding version signature using constexpr code based on this constant
-constexpr std::uint32_t format_version_signature = 2019'03'30u;
+constexpr std::uint32_t format_version_signature = 2020'08'25u;
 // Format version history:
 // - 2019'03'30: Initial binary format
+// - 2020'08'25: Fixed endianess of floating point values to big endian (breaks format on little endian architectures,
+//               big endian was chosen for consistency with integer network byte order).
 
 // Can be used to easily put a version tag into some header and error-out if it doesn't match on deserialize.
 using format_version_magic_number_t =
@@ -145,34 +149,73 @@ private:
 	}
 };
 
-static_assert(std::numeric_limits<float>::is_iec559,
-			  "(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
-static_assert(std::numeric_limits<double>::is_iec559,
-			  "(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
-
 template <typename T>
 struct floating_point_serializer {
-	static_assert(
-			!std::is_same_v<T, long double>,
-			"Serializing long double is not supported as its size varies on across common platforms / compilers.");
 	template <typename Buff>
 	static void serialize(Buff& buffer, T val) {
-		std::array<std::byte, sizeof(T)> data;
-		std::memcpy(data.data(), &val, sizeof(T));
+		validity_checks<T>();
+		std::array<std::byte, sizeof(T)> data{};
+		if constexpr(std::endian::native == std::endian::big) {
+			std::memcpy(data.data(), &val, sizeof(T));
+		} else if constexpr(std::endian::native == std::endian::little) {
+			// Working on a separate buffer allows for better optimization on some compilers (becomes bswap on clang).
+			std::array<std::byte, sizeof(T)> tmp{};
+			std::memcpy(tmp.data(), &val, sizeof(T));
+			std::reverse_copy(tmp.begin(), tmp.end(), data.begin());
+		} else {
+			static_assert(
+					dependent_false<T>,
+					"Floating point value serialization is currently not supported on mixed-endian architectures.");
+		}
 		buffer.write(data);
 	}
 	template <typename Buff>
 	static T deserialize(Buff& buffer) {
+		validity_checks<T>();
 		auto data = buffer.template read<sizeof(T)>();
-		T val;
-		std::memcpy(&val, data.data(), sizeof(T));
+		T val{};
+		if constexpr(std::endian::native == std::endian::big) {
+			std::memcpy(&val, data.data(), sizeof(T));
+		} else if constexpr(std::endian::native == std::endian::little) {
+			// Working on a separate buffer allows for better optimization on some compilers (becomes bswap on clang).
+			std::array<std::byte, sizeof(T)> tmp{};
+			std::reverse_copy(data.begin(), data.end(), tmp.begin());
+			std::memcpy(&val, tmp.data(), sizeof(T));
+		} else {
+			static_assert(
+					dependent_false<T>,
+					"Floating point value deserialization is currently not supported on mixed-endian architectures.");
+		}
 		return val;
 	}
 	static constexpr std::size_t size() {
+		validity_checks<T>();
 		return sizeof(T);
 	}
 	static constexpr std::size_t size(const T&) {
+		validity_checks<T>();
 		return size();
+	}
+
+private:
+	template <typename U>
+	static constexpr void validity_checks() {
+		// Perform static checks here, where it is only instantiated when member functions are, to only trigger failures
+		// in them if floating point values are actually used with structocol. This function does nothing at runtime.
+		static_assert(
+				!std::is_same_v<U, long double>,
+				"Serializing long double is not supported as its size varies on across common platforms / compilers.");
+		static_assert(std::numeric_limits<U>::is_iec559,
+					  "(De)Serialization of floating point values is only supported for "
+					  "architectures with IEC 559/IEEE 754 floating point types.");
+		static_assert(std::numeric_limits<U>::radix == 2,"(De)Serialization of floating point values is only supported for "
+					  "architectures with a binary floating point representation.");
+			static_assert(
+				(std::is_same_v<U, double> && sizeof(U) == 8) || (std::is_same_v<U, float> && sizeof(U) == 4),
+				"The given floating point type doesn't have the expected size (4 bytes for float, 8 bytes for "
+				"double, as specified by IEEE floating point numbers) and thus can't be (de)serialized without "
+				"desyncing the searialized byte stream. Because of this, floating point (de)serialization is not "
+				"supported on this architecture."); // Support would require platform-specific low level bit mashing.
 	}
 };
 
@@ -495,9 +538,8 @@ private:
 namespace detail {
 template <typename T, typename Enable = void>
 struct general_serializer {
-	static_assert(sizeof(T) == -1, // Always false but depends on T
-				  "The requested type is not supported for serialization out of the box. If its "
-				  "serialization is desired specialize structocol::serializer<T> for it.");
+	static_assert(dependent_false<T>, "The requested type is not supported for serialization out of the box. If its "
+									  "serialization is desired specialize structocol::serializer<T> for it.");
 };
 
 template <typename T>
