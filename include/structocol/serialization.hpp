@@ -19,6 +19,7 @@
 
 #include "exceptions.hpp"
 #include <array>
+#include <bit>
 #include <bitset>
 #include <climits>
 #include <cstddef>
