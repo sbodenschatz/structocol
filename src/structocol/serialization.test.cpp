@@ -101,14 +101,17 @@ constexpr std::array<std::byte, sizeof(T)> fp_big_endian_bytes(T v) {
 
 	return res;
 }
-void init_primitive(float& v, std::array<std::byte, sizeof(float)>& expected) {
-	v = 123.456f;
-	expected = fp_big_endian_bytes<23, 8, 127>(v);
+void init_primitive(float& v, std::array<std::byte, sizeof(float)>& expected, std::size_t index) {
+	constexpr float values[] = {123.456f, 0.00001f, -123.456f, 12300000.0001f, 1e20f, -420000000.0000234f};
+	v = values[index];
+	expected = fp_big_endian_bytes<23, 8, 127>(values[index]);
 }
-void init_primitive(double& v, std::array<std::byte, sizeof(double)>& expected) {
-	v = 23456.67891;
-	expected = fp_big_endian_bytes<52, 11, 1023>(v);
+void init_primitive(double& v, std::array<std::byte, sizeof(double)>& expected, std::size_t index) {
+	constexpr double values[] = {23456.67891, -456.6789123, 0.0000000000001, 1e200, -42e42, -12345678900000.321};
+	v = values[index];
+	expected = fp_big_endian_bytes<52, 11, 1023>(values[index]);
 }
+
 } // namespace
 
 TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserves value", "[serialization]",
@@ -122,19 +125,37 @@ TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserve
 	REQUIRE(inval == outval);
 }
 
-TEMPLATE_TEST_CASE("serialization and deserialization of floating point types preserves value", "[serialization]",
-				   float, double) {
+TEMPLATE_TEST_CASE("serialization and deserialization of floating point types preserves value and produces the "
+				   "expected bytes (big endian encoding)",
+				   "[serialization]", float, double) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	std::array<std::byte, sizeof(TestType)> expected_data{};
-	init_primitive(inval, expected_data);
+	SECTION("Test value 0") {
+		init_primitive(inval, expected_data, 0);
+	}
+	SECTION("Test value 1") {
+		init_primitive(inval, expected_data, 1);
+	}
+	SECTION("Test value 2") {
+		init_primitive(inval, expected_data, 2);
+	}
+	SECTION("Test value 3") {
+		init_primitive(inval, expected_data, 3);
+	}
+	SECTION("Test value 4") {
+		init_primitive(inval, expected_data, 4);
+	}
+	SECTION("Test value 5") {
+		init_primitive(inval, expected_data, 5);
+	}
 	structocol::serialize(vb, inval);
 	CHECK(std::equal(vb.raw_vector().begin(), vb.raw_vector().end(), expected_data.begin(), expected_data.end(),
 					 [](const std::byte& a, const std::byte& b) {
 						 return static_cast<unsigned char>(a) == static_cast<unsigned char>(b);
 					 }));
 	auto outval = structocol::deserialize<TestType>(vb);
-	REQUIRE(inval == Approx(outval).epsilon(0.0001));
+	CHECK(inval == Approx(outval));
 }
 
 namespace {
