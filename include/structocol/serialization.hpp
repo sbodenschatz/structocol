@@ -149,11 +149,12 @@ static_assert(std::numeric_limits<float>::is_iec559,
 			  "(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
 static_assert(std::numeric_limits<double>::is_iec559,
 			  "(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
-static_assert(std::numeric_limits<long double>::is_iec559,
-			  "(De)Serialization is only supported for architectures with IEC 559/IEEE 754 floating point types.");
 
 template <typename T>
 struct floating_point_serializer {
+	static_assert(
+			!std::is_same_v<T, long double>,
+			"Serializing long double is not supported as its size varies on across common platforms / compilers.");
 	template <typename Buff>
 	static void serialize(Buff& buffer, T val) {
 		std::array<std::byte, sizeof(T)> data;
@@ -615,8 +616,6 @@ template <>
 struct serializer<float> : floating_point_serializer<float> {};
 template <>
 struct serializer<double> : floating_point_serializer<double> {};
-template <>
-struct serializer<long double> : floating_point_serializer<long double> {};
 
 #ifdef __cpp_concepts
 

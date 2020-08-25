@@ -57,7 +57,7 @@ TEMPLATE_TEST_CASE("serialization size of integral types is calculated correctly
 }
 
 TEMPLATE_TEST_CASE("serialization size of floating point types is calculated correctly", "[serialization_size]", float,
-				   double, long double) {
+				   double) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_primitive(inval);

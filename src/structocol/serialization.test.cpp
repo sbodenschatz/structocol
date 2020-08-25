@@ -59,7 +59,7 @@ TEMPLATE_TEST_CASE("serialization and deserialization of integral types preserve
 }
 
 TEMPLATE_TEST_CASE("serialization and deserialization of floating point types preserves value", "[serialization]",
-				   float, double, long double) {
+				   float, double) {
 	structocol::vector_buffer vb;
 	TestType inval;
 	init_primitive(inval);
