@@ -208,7 +208,9 @@ private:
 		static_assert(std::numeric_limits<U>::is_iec559,
 					  "(De)Serialization of floating point values is only supported for "
 					  "architectures with IEC 559/IEEE 754 floating point types.");
-		static_assert(
+		static_assert(std::numeric_limits<U>::radix == 2,"(De)Serialization of floating point values is only supported for "
+					  "architectures with a binary floating point representation.");
+			static_assert(
 				(std::is_same_v<U, double> && sizeof(U) == 8) || (std::is_same_v<U, float> && sizeof(U) == 4),
 				"The given floating point type doesn't have the expected size (4 bytes for float, 8 bytes for "
 				"double, as specified by IEEE floating point numbers) and thus can't be (de)serialized without "
