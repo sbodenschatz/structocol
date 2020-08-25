@@ -96,6 +96,11 @@ struct has_clear_member<T, std::void_t<decltype(std::declval<T&>().clear())>> : 
 template <class T>
 inline constexpr bool has_clear_member_v = has_clear_member<T>::value;
 
+template <typename>
+constexpr bool dependent_false = false;
+template <typename>
+constexpr bool dependent_true = true;
+
 } // namespace structocol
 
 #endif // STRUCTOCOL_TYPE_UTILITIES_INCLUDED

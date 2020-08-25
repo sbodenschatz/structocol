@@ -496,9 +496,8 @@ private:
 namespace detail {
 template <typename T, typename Enable = void>
 struct general_serializer {
-	static_assert(sizeof(T) == -1, // Always false but depends on T
-				  "The requested type is not supported for serialization out of the box. If its "
-				  "serialization is desired specialize structocol::serializer<T> for it.");
+	static_assert(dependent_false<T>, "The requested type is not supported for serialization out of the box. If its "
+									  "serialization is desired specialize structocol::serializer<T> for it.");
 };
 
 template <typename T>
