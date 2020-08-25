@@ -57,6 +57,21 @@ struct magic_number {};
 
 static_assert(CHAR_BIT == 8, "(De)Serialization is only supported for architectures with 8-bit bytes.");
 
+// User code that needs to version its own binary format should:
+// - static_assert that that format_version_signature is the same as expected for the current version of its format and
+// bump its format version when the assert breaks
+// or
+// - Determine its corresponding version signature using constexpr code based on this constant
+constexpr std::uint32_t format_version_signature = 2019'03'30u;
+// Format version history:
+// - 2019'03'30: Initial binary format
+
+// Can be used to easily put a version tag into some header and error-out if it doesn't match on deserialize.
+using format_version_magic_number_t =
+		magic_number<(format_version_signature >> 24) & 0xFF, (format_version_signature >> 16) & 0xFF,
+					 (format_version_signature >> 8) & 0xFF, format_version_signature & 0xFF>;
+constexpr format_version_magic_number_t format_version_magic_number{};
+
 template <typename Buff, typename T>
 void serialize(Buff& buffer, const T& val);
 template <typename T, typename Buff>
@@ -720,6 +735,15 @@ constexpr std::size_t serialized_size() {
 template <typename T>
 std::size_t serialized_size(const T& val) {
 	return serializer<std::remove_const_t<T>>::size(val);
+}
+
+template <typename Buff>
+void write_format_version_header(Buff& buffer) {
+	serialize(buffer, format_version_magic_number);
+}
+template <typename Buff>
+void check_format_version_header(Buff& buffer) {
+	deserialize<format_version_magic_number_t>(buffer);
 }
 
 } // namespace structocol
