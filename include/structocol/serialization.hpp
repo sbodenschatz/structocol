@@ -151,13 +151,9 @@ private:
 
 template <typename T>
 struct floating_point_serializer {
-	static_assert(
-			!std::is_same_v<T, long double>,
-			"Serializing long double is not supported as its size varies on across common platforms / compilers.");
-	static_assert(std::numeric_limits<T>::is_iec559, "(De)Serialization of floating point values is only supported for "
-													 "architectures with IEC 559/IEEE 754 floating point types.");
 	template <typename Buff>
 	static void serialize(Buff& buffer, T val) {
+		validity_checks<T>();
 		std::array<std::byte, sizeof(T)> data{};
 		if constexpr(std::endian::native == std::endian::big) {
 			std::memcpy(data.data(), &val, sizeof(T));
@@ -175,6 +171,7 @@ struct floating_point_serializer {
 	}
 	template <typename Buff>
 	static T deserialize(Buff& buffer) {
+		validity_checks<T>();
 		auto data = buffer.template read<sizeof(T)>();
 		T val{};
 		if constexpr(std::endian::native == std::endian::big) {
@@ -192,10 +189,25 @@ struct floating_point_serializer {
 		return val;
 	}
 	static constexpr std::size_t size() {
+		validity_checks<T>();
 		return sizeof(T);
 	}
 	static constexpr std::size_t size(const T&) {
+		validity_checks<T>();
 		return size();
+	}
+
+private:
+	template <typename U>
+	static constexpr void validity_checks() {
+		// Perform static checks here, where it is only instantiated when member functions are, to only trigger failures
+		// in them if floating point values are actually used with structocol. This function does nothing at runtime.
+		static_assert(
+				!std::is_same_v<U, long double>,
+				"Serializing long double is not supported as its size varies on across common platforms / compilers.");
+		static_assert(std::numeric_limits<U>::is_iec559,
+					  "(De)Serialization of floating point values is only supported for "
+					  "architectures with IEC 559/IEEE 754 floating point types.");
 	}
 };
 
