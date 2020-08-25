@@ -737,6 +737,15 @@ std::size_t serialized_size(const T& val) {
 	return serializer<std::remove_const_t<T>>::size(val);
 }
 
+template <typename Buff>
+void write_format_version_header(Buff& buffer) {
+	serialize(buffer, format_version_magic_number);
+}
+template <typename Buff>
+void check_format_version_header(Buff& buffer) {
+	deserialize<format_version_magic_number_t>(buffer);
+}
+
 } // namespace structocol
 
 #endif // STRUCTOCOL_SERIALIZATION_INCLUDED
