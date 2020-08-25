@@ -18,6 +18,7 @@
 #endif
 
 #include "exceptions.hpp"
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <bitset>
@@ -161,10 +162,10 @@ struct floating_point_serializer {
 		if constexpr(std::endian::native == std::endian::big) {
 			std::memcpy(data.data(), &val, sizeof(T));
 		} else if constexpr(std::endian::native == std::endian::little) {
-			const std::byte* val_bytes = reinterpret_cast<const std::byte*>(&val);
-			for(std::size_t i = 0; i < sizeof(T); ++i) {
-				data[i] = val_bytes[sizeof(T) - i - 1];
-			}
+			// Working on a separate buffer allows for better optimization on some compilers (becomes bswap on clang).
+			std::array<std::byte, sizeof(T)> tmp{};
+			std::memcpy(tmp.data(), &val, sizeof(T));
+			std::reverse_copy(tmp.begin(), tmp.end(), data.begin());
 		} else {
 			static_assert(
 					dependent_false<T>,
@@ -179,10 +180,10 @@ struct floating_point_serializer {
 		if constexpr(std::endian::native == std::endian::big) {
 			std::memcpy(&val, data.data(), sizeof(T));
 		} else if constexpr(std::endian::native == std::endian::little) {
-			std::byte* val_bytes = reinterpret_cast<std::byte*>(&val);
-			for(std::size_t i = 0; i < sizeof(T); ++i) {
-				val_bytes[i] = data[sizeof(T) - i - 1];
-			}
+			// Working on a separate buffer allows for better optimization on some compilers (becomes bswap on clang).
+			std::array<std::byte, sizeof(T)> tmp{};
+			std::reverse_copy(data.begin(), data.end(), tmp.begin());
+			std::memcpy(&val, tmp.data(), sizeof(T));
 		} else {
 			static_assert(
 					dependent_false<T>,
