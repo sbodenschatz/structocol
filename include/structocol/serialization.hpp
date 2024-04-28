@@ -142,7 +142,7 @@ private:
 	using uint = std::make_unsigned_t<T>;
 	static T to_signed(uint val) {
 		// See https://stackoverflow.com/a/13208789
-		auto min = std::numeric_limits<T>::min();
+		constexpr auto min = std::numeric_limits<T>::min();
 		if(val <= static_cast<uint>(min)) return static_cast<T>(val);
 		if(val >= static_cast<uint>(min)) return static_cast<T>(val - static_cast<uint>(min)) + min;
 		throw deserialization_data_error("Value not representable in target type.");
