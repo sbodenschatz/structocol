@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <memory>
 #include <structocol/buffers_ring.hpp>
 #include <structocol/recycling_buffers_queue.hpp>

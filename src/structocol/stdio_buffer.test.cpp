@@ -4,7 +4,7 @@
 #include <cstdio>
 
 #include <algorithm>
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <memory>
 #include <structocol/stdio_buffer.hpp>
 

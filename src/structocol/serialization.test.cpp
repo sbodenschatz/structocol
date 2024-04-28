@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <cfloat>
 #include <cmath>
 #include <cstddef>
@@ -155,7 +155,7 @@ TEMPLATE_TEST_CASE("serialization and deserialization of floating point types pr
 						 return static_cast<unsigned char>(a) == static_cast<unsigned char>(b);
 					 }));
 	auto outval = structocol::deserialize<TestType>(vb);
-	CHECK(inval == Approx(outval));
+	CHECK_THAT(inval, Catch::Matchers::WithinAbs(outval,0.00001));
 }
 
 namespace {

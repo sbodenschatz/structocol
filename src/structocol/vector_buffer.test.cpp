@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 #include <structocol/vector_buffer.hpp>
 
 TEST_CASE("vector_buffer can read back data written to it (reads after writes)", "[vector_buffer]") {

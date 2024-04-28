@@ -17,6 +17,8 @@ if(STRUCTOCOL_BUILD_TESTING)
 	if(NOT TARGET Catch2::Catch2)
 		add_subdirectory(external/Catch2)
 		list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/external/Catch2/contrib")
+		# We need Catch2 compiled for C++17 to have support for std::byte
+		target_compile_features(Catch2 PUBLIC cxx_std_17)
 	endif()
 	include(Catch)
 	enable_testing()
@@ -64,7 +66,6 @@ endif()
 
 if(STRUCTOCOL_BUILD_TESTING)
 	add_executable(structocol_unit_tests
-			src/main.test.cpp
 			src/structocol/vector_buffer.test.cpp
 			src/structocol/serialization.test.cpp
 			src/structocol/serialized_size.test.cpp
@@ -74,7 +75,7 @@ if(STRUCTOCOL_BUILD_TESTING)
 		)
 	target_link_libraries(structocol_unit_tests PUBLIC
 			structocol_check_build
-			Catch2::Catch2
+			Catch2::Catch2WithMain
 		)
 	catch_discover_tests(structocol_unit_tests)
 endif()
