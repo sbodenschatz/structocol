@@ -66,12 +66,12 @@ endif()
 
 if(STRUCTOCOL_BUILD_TESTING)
 	add_executable(structocol_unit_tests
-			src/structocol/vector_buffer.test.cpp
-			src/structocol/serialization.test.cpp
-			src/structocol/serialized_size.test.cpp
-			src/structocol/protocol_handler.test.cpp
-			src/structocol/stdio_buffer.test.cpp
-			src/structocol/buffers_queuing.test.cpp
+			tests/vector_buffer.test.cpp
+			tests/serialization.test.cpp
+			tests/serialized_size.test.cpp
+			tests/protocol_handler.test.cpp
+			tests/stdio_buffer.test.cpp
+			tests/buffers_queuing.test.cpp
 		)
 	target_link_libraries(structocol_unit_tests PUBLIC
 			structocol_check_build
