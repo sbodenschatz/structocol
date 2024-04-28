@@ -34,6 +34,7 @@ add_library(structocol_check_build
 		include/structocol/stream_buffer.hpp
 		include/structocol/multiplexing.hpp	
 		include/structocol/buffers_ring.hpp
+		include/structocol/buffers_pool.hpp
 		include/structocol/recycling_buffers_queue.hpp
 		include/structocol/stdio_buffer.hpp
 		include/structocol/exceptions.hpp
