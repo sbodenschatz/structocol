@@ -2,8 +2,14 @@ cmake_minimum_required(VERSION 3.13)
 
 project(structocol)
 
-if(NOT TARGET boost::pfr)
-	include(external/magic_get_submodule.cmake)
+find_package(Boost 1.75)
+
+if(TARGET Boost::boost)
+	add_library(Boost::pfr ALIAS Boost::boost)
+endif()
+
+if(NOT TARGET Boost::pfr)
+	add_subdirectory(external/magic_get)
 endif()
 
 option(STRUCTOCOL_BUILD_TESTING "Build tests for the structocol library" ON)
@@ -37,7 +43,7 @@ target_include_directories(structocol INTERFACE
 		$<INSTALL_INTERFACE:include>
 	)
 target_compile_features(structocol INTERFACE cxx_std_20)
-target_link_libraries(structocol INTERFACE boost::pfr)
+target_link_libraries(structocol INTERFACE Boost::pfr)
 target_compile_options(structocol_check_build PUBLIC
 		$<$<CXX_COMPILER_ID:MSVC>:/MP /W4 /WX /bigobj>
 		$<$<CXX_COMPILER_ID:GNU>: -Wall -Wextra -Werror $<$<PLATFORM_ID:Windows>:-Wa,-mbig-obj>>
@@ -47,7 +53,6 @@ target_link_libraries(structocol_check_build PUBLIC structocol)
 
 option(STRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT "Disable optional support for Boost.Asio even if boost could be found." OFF)
 if(NOT STRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT)
-	find_package(Boost)
 	if(TARGET Boost::boost)
 		target_link_libraries(structocol INTERFACE Boost::boost)
 		target_compile_definitions(structocol INTERFACE STRUCTOCOL_ENABLE_ASIO_SUPPORT)

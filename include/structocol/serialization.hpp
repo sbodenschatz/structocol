@@ -11,8 +11,8 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
 #endif
-#include <boost/pfr/precise/core.hpp>
-#include <boost/pfr/precise/tuple_size.hpp>
+#include <boost/pfr/core.hpp>
+#include <boost/pfr/tuple_size.hpp>
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
