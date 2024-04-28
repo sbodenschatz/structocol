@@ -34,6 +34,6 @@
   script:
   - cmake -E make_directory build
   - cd build
-  - cmake -G "Visual Studio 16 2019" -A x64 -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT="$env:DISABLE_ASIO_SUPPORT" ..
+  - cmake -G "Visual Studio 17 2022" -A x64 -DSTRUCTOCOL_FORCE_DISABLE_ASIO_SUPPORT="$env:DISABLE_ASIO_SUPPORT" ..
   - cmake --build . --config "$env:BUILD_TYPE"
   - ctest -C "$env:BUILD_TYPE" --output-on-failure
