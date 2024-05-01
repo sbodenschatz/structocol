@@ -62,7 +62,26 @@ The template classes `buffers_ring` and `recycling_buffers_queue` provide functi
 `buffers_ring` operates in FIFO order, `recycling_buffers_queue` reuses the most recently returned buffers first (i.e. LIFO).
 
 ## Protocol Handler
-TODO
+The library also provides a layer of so-called protocol handlers in the form of the template class `protocol_handler<Msgs...>`.
+It is instantiated with a list of possible message classes and manages encoding and decoding the types of serialized message objects.
+That is, with just the serialization layer, the deserializing code needs to know which type to expect for decoding,
+as the serialization layer only encodes the state of the object but not its type.
+Note that encoding an arbitrary type without known context would be very hard to do in C++ as there is no real reflection mechanism available yet.
+With the protocol handler, the list of possible types is known and the type can be encoded as an index into the list.
+Based on this, one should note that **the list of message types *must* match on both sides of the serialization and so must the structure of the messages**.
+For simplicity and efficiency of both, the code and the encoding, **structocol currently does not implement a compatibility layer that allows adding or removing fields or messages**, like e.g. the one that protocol buffers provides.
+
+For the serializing side, `protocol_handler<Msgs...>` provides `encode_message` that serializes the type index followed by the serialized state of the object for a given message object, and `calculate_message_size` that can calculate in advance how many bytes `encode_message` would produce.
+For the deserializing side, it provides `decode_message` which decode the message and returns it wrapped in a `std::variant<Msgs...>`,
+and `process_message` with takes a callable object that must be callable with all message type known by the `protocol_handler` and calls the appropriate overload with the decoded message.
 
 ## Multiplexing
-TODO
+While a naive UDP protocol may only transfer one message object per datagram, where protocol handler on top of the serialization mechanism maybe sufficient,
+stream-based protocols that don't want to block in the middle of deserialization need a way of delimiting messages in the read input,
+to know when a message has been fully received and can be deserialized.
+A practical way of doing this is prefixing every message with its own length in bytes.
+That amount is then first read into a buffer before dispatching that buffer to deserialization when it is complete.
+To implement this on top of Boost.ASIO's asynchronous IO operations, the [`multiplexing.hpp` header](include/structocol/multiplexing.hpp) provides `encode_message_multiplexed` for sending and `async_read_multiplexed` and `async_process_multiplexed` for receiving.
+Here, `async_read_multiplexed` only takes care of reading one message worth of data into a given buffer and invoking the completion handler when the data are available in the buffer.
+`async_process_multiplexed` builds on top of this, and maps the received message buffer through a given `protocol_handler`'s `process_message` member function, 
+so that the given handler is invoked with the decoded message object or a `boost::system::error_code` if ASIO reported an error from the receiving operation.
