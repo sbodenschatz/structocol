@@ -60,6 +60,8 @@ If compiled with optional Boost.ASIO support, it provides integrations for being
 ## Buffer Pools
 The template classes `buffers_ring` and `recycling_buffers_queue` provide functionality to hold a pool of reusable buffer objects and differ by reuse order.
 `buffers_ring` operates in FIFO order, `recycling_buffers_queue` reuses the most recently returned buffers first (i.e. LIFO).
+Both buffer pools alos manage the active buffers in a queue which can be used as a message queueing mechanism, i.e.
+putting each message into a buffer in the queue and having a task that sends them to the network after the previous one has completed transmission.
 
 ## Protocol Handler
 The library also provides a layer of so-called protocol handlers in the form of the template class `protocol_handler<Msgs...>`.
@@ -76,8 +78,7 @@ For the deserializing side, it provides `decode_message` which decode the messag
 and `process_message` with takes a callable object that must be callable with all message type known by the `protocol_handler` and calls the appropriate overload with the decoded message.
 
 ## Multiplexing
-While a naive UDP protocol may only transfer one message object per datagram, where protocol handler on top of the serialization mechanism maybe sufficient,
-stream-based protocols that don't want to block in the middle of deserialization need a way of delimiting messages in the read input,
+While for datagram-based protocols, reading all messages out of a datagram buffer (using a protocol handler on top of the serialization mechanism) until the buffer is consumed is often sufficient, stream-based protocols that don't want to block in the middle of deserialization for data to arrive need a way of delimiting messages in the read input,
 to know when a message has been fully received and can be deserialized.
 A practical way of doing this is prefixing every message with its own length in bytes.
 That amount is then first read into a buffer before dispatching that buffer to deserialization when it is complete.
