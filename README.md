@@ -1,6 +1,6 @@
 # structocol
 
-A simple serialization and protocol library.
+A simple serialization and protocol library using modern C++.
 The name is a contraction of struct and protocol, because the intention is that protocol messages can be easily defined as C++ structs.
 ```C++
 struct test_a {
